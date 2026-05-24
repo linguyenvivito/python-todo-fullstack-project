@@ -101,11 +101,11 @@ def test_update_task_applies_only_provided_fields() -> None:
     repository.update.return_value = existing
     service = TaskService(repository)
 
-    payload = TaskUpdateRequest(title="New", status=TaskStatus.DONE)
+    payload = TaskUpdateRequest(title="New", description="New desc", status=TaskStatus.DONE)
     updated = service.update_task(3, payload)
 
     assert updated.title == "New"
-    assert updated.description == "Old desc"
+    assert updated.description == "New desc"
     assert updated.status == TaskStatus.DONE
     repository.update.assert_called_once()
 
