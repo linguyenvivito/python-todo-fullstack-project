@@ -1,0 +1,244 @@
+:root {
+  --bg-base: #f5f0e8;
+  --bg-soft: #fefaf4;
+  --ink: #101011;
+  --ink-muted: #4f5256;
+  --accent: #f05d23;
+  --accent-2: #0e7773;
+  --card: #ffffff;
+  --line: #1c1c1f;
+  --shadow: rgba(16, 16, 17, 0.14);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Space Grotesk", sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 15% 20%, rgba(240, 93, 35, 0.17), transparent 36%),
+    radial-gradient(circle at 90% 10%, rgba(14, 119, 115, 0.2), transparent 28%),
+    linear-gradient(135deg, #efe6db, var(--bg-base));
+}
+
+.page-shell {
+  width: min(1100px, 92vw);
+  margin: 0 auto;
+  padding: 2.4rem 0 3.5rem;
+  animation: fade-in 450ms ease;
+}
+
+.hero {
+  border: 2px solid var(--line);
+  background: var(--bg-soft);
+  border-radius: 18px;
+  padding: 1.5rem 1.3rem;
+  box-shadow: 7px 7px 0 var(--line);
+}
+
+.hero-kicker {
+  margin: 0;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+  font-weight: 700;
+}
+
+.hero h1 {
+  margin: 0.35rem 0 0;
+  font-size: clamp(2rem, 5vw, 3rem);
+  line-height: 1;
+}
+
+.hero-subtitle {
+  margin: 0.65rem 0 0;
+  color: var(--ink-muted);
+  max-width: 62ch;
+}
+
+.composer {
+  margin-top: 1rem;
+}
+
+.composer-form {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.composer-form input,
+.composer-form textarea,
+select {
+  width: 100%;
+  border: 2px solid var(--line);
+  background: #fff;
+  border-radius: 12px;
+  padding: 0.7rem 0.8rem;
+  font: inherit;
+}
+
+.composer-form button,
+.card-actions button {
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  padding: 0.55rem 1rem;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.composer-form button {
+  justify-self: start;
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 3px 3px 0 var(--line);
+}
+
+.card-actions button {
+  background: #fff;
+  color: var(--ink);
+}
+
+.composer-form button:hover,
+.card-actions button:hover {
+  transform: translate(-1px, -1px);
+}
+
+.status-banner {
+  margin: 0.85rem 0;
+  padding: 0.65rem 0.8rem;
+  border-radius: 10px;
+  border: 2px dashed var(--line);
+  background: #fff9d6;
+}
+
+.status-banner.error {
+  background: #ffd8d8;
+}
+
+.board {
+  margin-top: 1.2rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.column {
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  background: #ffffffc9;
+  backdrop-filter: blur(2px);
+  overflow: hidden;
+}
+
+.column-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0.9rem;
+  border-bottom: 2px solid var(--line);
+  background: linear-gradient(120deg, rgba(240, 93, 35, 0.22), rgba(14, 119, 115, 0.2));
+}
+
+.column-head h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.column-head span {
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  min-width: 2rem;
+  padding: 0.1rem 0.4rem;
+  text-align: center;
+  font-family: "IBM Plex Mono", monospace;
+  background: #fff;
+}
+
+.column-body {
+  padding: 0.8rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.task-card {
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  padding: 0.7rem;
+  background: var(--card);
+  box-shadow: 4px 4px 0 var(--shadow);
+  animation: slide-up 230ms ease;
+}
+
+.task-card h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.task-card p {
+  margin: 0.45rem 0 0.8rem;
+  color: var(--ink-muted);
+  font-size: 0.95rem;
+}
+
+.task-card.todo {
+  border: 4px solid #0990ff;
+}
+
+.task-card.in_progress {
+  border: 4px solid #f0a523;
+}
+
+.task-card.done {
+  border: 4px solid #ff2600;
+}
+
+.card-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.empty-state {
+  margin: 0;
+  color: var(--ink-muted);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.85rem;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 900px) {
+  .board {
+    grid-template-columns: 1fr;
+  }
+
+  .page-shell {
+    padding-top: 1.2rem;
+  }
+}

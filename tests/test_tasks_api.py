@@ -1,0 +1,73 @@
+import os
+from pathlib import Path
+
+from fastapi.testclient import TestClient
+from app.core.database import init_database
+
+
+TEST_DB = Path(__file__).with_name("test_tasks.db")
+os.environ["SQLITE_DB_PATH"] = str(TEST_DB)
+
+from main import app  # noqa: E402
+
+
+def _reset_db() -> None:
+    if TEST_DB.exists():
+        TEST_DB.unlink()
+    init_database()
+
+
+def test_tasks_crud_flow() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    create_response = client.post(
+        "/tasks",
+        json={"title": "Write tests", "description": "Add API coverage"},
+    )
+    assert create_response.status_code == 201
+
+    created = create_response.json()
+    assert created["title"] == "Write tests"
+    assert created["description"] == "Add API coverage"
+    assert created["status"] == "todo"
+    task_id = created["id"]
+
+    list_response = client.get("/tasks")
+    assert list_response.status_code == 200
+    items = list_response.json()
+    assert len(items) == 1
+    assert items[0]["id"] == task_id
+
+    get_response = client.get(f"/tasks/{task_id}")
+    assert get_response.status_code == 200
+    assert get_response.json()["title"] == "Write tests"
+
+    patch_response = client.patch(
+        f"/tasks/{task_id}",
+        json={"status": "done", "title": "Write and run tests"},
+    )
+    assert patch_response.status_code == 200
+    patched = patch_response.json()
+    assert patched["status"] == "done"
+    assert patched["title"] == "Write and run tests"
+
+    delete_response = client.delete(f"/tasks/{task_id}")
+    assert delete_response.status_code == 204
+
+    after_delete = client.get(f"/tasks/{task_id}")
+    assert after_delete.status_code == 404
+
+
+def test_not_found_paths() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    get_missing = client.get("/tasks/999999")
+    assert get_missing.status_code == 404
+
+    patch_missing = client.patch("/tasks/999999", json={"status": "done"})
+    assert patch_missing.status_code == 404
+
+    delete_missing = client.delete("/tasks/999999")
+    assert delete_missing.status_code == 404

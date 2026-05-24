@@ -1,0 +1,49 @@
+from typing import List
+
+from app.core.exceptions import TaskNotFoundError
+from app.core.models import Task
+from app.slices.tasks.models import TaskCreateRequest, TaskUpdateRequest
+from app.slices.tasks.repository import TaskRepository
+
+
+class TaskService:
+    def __init__(self, repository: TaskRepository):
+        self._repository = repository
+
+    def create_task(self, payload: TaskCreateRequest) -> Task:
+        return self._repository.create(
+            title=payload.title,
+            description=payload.description,
+        )
+
+    def list_tasks(self) -> List[Task]:
+        return self._repository.list_all()
+
+    def get_task(self, task_id: int) -> Task:
+        task = self._repository.get_by_id(task_id)
+        if not task:
+            raise TaskNotFoundError(task_id)
+        return task
+    
+    def get_task_by_name(self, task_name: str) -> Task:
+        tasks = self._repository.list_all()
+        for task in tasks:
+            if task_name in task.title:
+                return task
+        raise TaskNotFoundError(-1)
+
+    def update_task(self, task_id: int, payload: TaskUpdateRequest) -> Task:
+        task = self.get_task(task_id)
+
+        if payload.title is not None:
+            task.title = payload.title
+        if payload.description is not None:
+            task.description = payload.description
+        if payload.status is not None:
+            task.status = payload.status
+
+        return self._repository.update(task)
+
+    def delete_task(self, task_id: int) -> None:
+        self.get_task(task_id)
+        self._repository.delete(task_id)
