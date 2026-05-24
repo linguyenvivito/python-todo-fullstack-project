@@ -127,4 +127,16 @@ CI runs on push and pull request:
 
 # Environment Variables
 
-CORS_ALLOW_ORIGINS = e189466f77631d5e0bff6db6f022b5ac
+
+# Coverage Report
+
+`python -m pytest tests -v --cov=app --cov-report=term-missing --cov-report=html`
+
+
+# Production
+
+## Live Back End URL
+https://python-todo-fullstack-project.onrender.com
+
+## Live Front End URL
+https://linguyenvivito.github.io/python-todo-fullstack-project
