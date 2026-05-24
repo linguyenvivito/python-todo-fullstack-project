@@ -1,6 +1,6 @@
 from typing import List
 
-from app.core.exceptions import TaskNotFoundError
+from app.core.exceptions import InvalidTaskSearchError, TaskNotFoundByNameError, TaskNotFoundError
 from app.core.models import Task
 from app.slices.tasks.models import TaskCreateRequest, TaskUpdateRequest
 from app.slices.tasks.repository import TaskRepository
@@ -24,13 +24,17 @@ class TaskService:
         if not task:
             raise TaskNotFoundError(task_id)
         return task
-    
+
     def get_task_by_name(self, task_name: str) -> Task:
+        normalized_name = task_name.strip()
+        if not normalized_name:
+            raise InvalidTaskSearchError()
+
         tasks = self._repository.list_all()
         for task in tasks:
-            if task_name in task.title:
+            if normalized_name.lower() in task.title.lower():
                 return task
-        raise TaskNotFoundError(-1)
+        raise TaskNotFoundByNameError(normalized_name)
 
     def update_task(self, task_id: int, payload: TaskUpdateRequest) -> Task:
         task = self.get_task(task_id)

@@ -2,7 +2,7 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 
-from app.core.exceptions import TaskNotFoundError
+from app.core.exceptions import InvalidTaskSearchError, TaskNotFoundByNameError, TaskNotFoundError
 from app.slices.tasks.models import TaskCreateRequest, TaskResponse, TaskUpdateRequest
 from app.slices.tasks.repository import TaskRepository
 from app.slices.tasks.service import TaskService
@@ -45,8 +45,10 @@ def get_task_by_name(task_name: str, service: TaskService = Depends(get_task_ser
     try:
         task = service.get_task_by_name(task_name)
         return TaskResponse.model_validate(task, from_attributes=True)
-    except TaskNotFoundError as exc:
+    except TaskNotFoundByNameError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    except InvalidTaskSearchError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
 
 @router.patch("/{task_id}", response_model=TaskResponse)
 def update_task(

@@ -17,6 +17,14 @@ def _reset_db() -> None:
     init_database()
 
 
+def test_health_check() -> None:
+    client = TestClient(app)
+
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+
+
 def test_tasks_crud_flow() -> None:
     _reset_db()
     client = TestClient(app)
@@ -43,6 +51,10 @@ def test_tasks_crud_flow() -> None:
     assert get_response.status_code == 200
     assert get_response.json()["title"] == "Write tests"
 
+    get_by_name_response = client.get("/tasks/name/Write")
+    assert get_by_name_response.status_code == 200
+    assert get_by_name_response.json()["id"] == task_id
+
     patch_response = client.patch(
         f"/tasks/{task_id}",
         json={"status": "done", "title": "Write and run tests"},
@@ -66,8 +78,22 @@ def test_not_found_paths() -> None:
     get_missing = client.get("/tasks/999999")
     assert get_missing.status_code == 404
 
+    get_by_name_missing = client.get("/tasks/name/not-existing-task")
+    assert get_by_name_missing.status_code == 404
+
+    get_by_name_invalid = client.get("/tasks/name/%20%20%20")
+    assert get_by_name_invalid.status_code == 400
+
     patch_missing = client.patch("/tasks/999999", json={"status": "done"})
     assert patch_missing.status_code == 404
 
     delete_missing = client.delete("/tasks/999999")
     assert delete_missing.status_code == 404
+
+
+def test_create_task_validation_error() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    response = client.post("/tasks", json={"description": "missing title"})
+    assert response.status_code == 422

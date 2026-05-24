@@ -1,4 +1,5 @@
 import os
+from typing import Dict
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,6 +9,10 @@ from app.slices.tasks.router import router as tasks_router
 
 def create_app() -> FastAPI:
     app = FastAPI(title="Task Management API")
+
+    @app.get("/health")
+    def health_check() -> Dict[str, str]:
+        return {"status": "ok"}
 
     cors_allow_origins = os.getenv(
         "CORS_ALLOW_ORIGINS",
