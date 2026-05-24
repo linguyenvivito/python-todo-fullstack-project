@@ -62,3 +62,15 @@ git commit -m "feat: add <feature summary>"
 
 # 7) Push branch to GitHub
 git push -u origin feature/<short-name>
+
+# 1) make sure you're on main
+git checkout main
+
+# 2) fetch latest remote refs (does not change your files)
+git fetch origin
+
+# 3) compare local main with remote main
+git status -sb
+
+
+git pull origin main
