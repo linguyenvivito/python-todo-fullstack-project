@@ -12,6 +12,17 @@ git branch -M main
 git remote add origin https://github.com/linguyenvivito/python-todo-fullstack-project
 git push -u origin main
 
+# Check current branch
+git branch --show-current
+
+# Confirm latest commit exists
+git log --oneline -n 3
+
+# Push current branch to remote (first time for this branch)
+git push -u origin $(git branch --show-current)
+
+# Next pushes on same branch
+git push
 
 # 1) Check changed files
 git status
