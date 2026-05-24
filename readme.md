@@ -122,3 +122,9 @@ CI runs on push and pull request:
 
 - SQLite database file defaults to `tasks.db` in project root.
 - You can override DB path with `SQLITE_DB_PATH`.
+
+
+
+# Environment Variables
+
+CORS_ALLOW_ORIGINS = e189466f77631d5e0bff6db6f022b5ac
