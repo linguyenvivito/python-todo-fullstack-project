@@ -90,7 +90,7 @@ export default function App() {
       <header className="hero">
         <p className="hero-kicker">Task Management API</p>
         <h1>Fluxboard</h1>
-        <small className="version">v1.0.1</small>
+        <small className="version"><v1 className="0 2"></v1></small>
         <p className="hero-subtitle">
           A live React interface for your FastAPI + SQLite task service.
         </p>
