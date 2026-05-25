@@ -17,3 +17,7 @@ frontend/dist/
 .DS_Store
 Thumbs.db
 .vscode/
+
+# Markdown files
+git.md
+upgrade-python.md

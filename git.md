@@ -74,3 +74,7 @@ git status -sb
 
 
 git pull origin main
+
+
+# git security key
+vivito
