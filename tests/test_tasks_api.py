@@ -6,6 +6,7 @@ from app.core.database import init_database
 
 
 TEST_DB = Path(__file__).with_name("test_tasks.db")
+os.environ.pop("DATABASE_URL", None)
 os.environ["SQLITE_DB_PATH"] = str(TEST_DB)
 
 from main import app  # noqa: E402

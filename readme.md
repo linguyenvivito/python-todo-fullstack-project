@@ -120,12 +120,22 @@ CI runs on push and pull request:
 
 ## Notes
 
-- SQLite database file defaults to `tasks.db` in project root.
-- You can override DB path with `SQLITE_DB_PATH`.
+- Default database is SQLite (`tasks.db` in project root).
+- Set `SQLITE_DB_PATH` to override the SQLite file path.
+- To use PostgreSQL instead, set `DATABASE_URL`.
 
 
 
 # Environment Variables
+
+- `SQLITE_DB_PATH` (optional): path to SQLite file.
+- `DATABASE_URL` (optional): PostgreSQL connection string.
+
+Example PostgreSQL value:
+
+```powershell
+$env:DATABASE_URL = "postgresql://postgres:your_password@localhost:5432/tasks_db"
+```
 
 
 # Coverage Report
