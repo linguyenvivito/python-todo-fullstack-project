@@ -114,6 +114,32 @@ class TaskRepository:
             return None
         return self._row_to_task(row)
 
+    def get_by_status(self, status: str) -> List[Task]:
+        with get_connection() as connection:
+            if use_postgres():
+                if dict_row is None:
+                    raise RuntimeError(
+                        "PostgreSQL mode requires psycopg to be installed."
+                    )
+
+                pg_connection = cast(Any, connection)
+                cursor = pg_connection.cursor(row_factory=dict_row)
+                try:
+                    cursor.execute(
+                        "SELECT id, title, description, status FROM tasks WHERE status = %s",
+                        (status,),
+                    )
+                    rows = cursor.fetchall()
+                finally:
+                    cursor.close()
+            else:
+                rows = connection.execute(
+                    "SELECT id, title, description, status FROM tasks WHERE status = ?",
+                    (status,),
+                ).fetchall()
+
+        return [self._row_to_task(row) for row in rows]
+
     def update(self, task: Task) -> Task:
         with get_connection() as connection:
             if use_postgres():

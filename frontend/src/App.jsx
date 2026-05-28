@@ -1,16 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
-import { createTask, deleteTask, getTasks, updateTask } from "./api";
+import { createTask, deleteTask, getTasks, getTasksByStatus, updateTask } from "./api";
 
 const STATUS_LABELS = {
   todo: "Todo",
   in_progress: "In Progress",
   done: "Done",
+  archived: "Archived"
 };
 
-const STATUS_ORDER = ["todo", "in_progress", "done"];
+const STATUS_ORDER = ["todo", "in_progress", "done", "archived"];
+
+const isArchivedStatus = (status) => status === "archived";
 
 export default function App() {
   const [tasks, setTasks] = useState([]);
+  const [showArchivedOnly, setShowArchivedOnly] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,10 +25,25 @@ export default function App() {
     try {
       setLoading(true);
       setError("");
+      setShowArchivedOnly(false);
       const data = await getTasks();
       setTasks(data);
     } catch (err) {
       setError(err.message || "Failed to load tasks");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function loadArchivedTasks() {
+    try {
+      setLoading(true);
+      setError("");
+      setShowArchivedOnly(true);
+      const data = await getTasksByStatus("archived");
+      setTasks(data);
+    } catch (err) {
+      setError(err.message || "Failed to load archived tasks");
     } finally {
       setLoading(false);
     }
@@ -62,7 +81,11 @@ export default function App() {
     try {
       setError("");
       await updateTask(task.id, { status: newStatus });
-      await loadTasks();
+      if (isArchivedStatus(newStatus)) {
+        await loadTasks();
+      } else {
+        await loadArchivedTasks();
+      }
     } catch (err) {
       setError(err.message || "Failed to update task");
     }
@@ -79,11 +102,15 @@ export default function App() {
   }
 
   const groupedTasks = useMemo(() => {
-    return STATUS_ORDER.map((status) => ({
+    const visibleStatuses = showArchivedOnly
+      ? ["archived"]
+      : STATUS_ORDER.filter((status) => !isArchivedStatus(status));
+
+    return visibleStatuses.map((status) => ({
       status,
       tasks: tasks.filter((task) => task.status === status),
     }));
-  }, [tasks]);
+  }, [showArchivedOnly, tasks]);
 
   return (
     <div className="page-shell">
@@ -112,9 +139,18 @@ export default function App() {
             maxLength={500}
             rows={3}
           />
-          <button type="submit" disabled={submitting}>
-            {submitting ? "Adding..." : "Add Task"}
-          </button>
+          <div className="form-actions">
+            <button type="submit" disabled={submitting}>
+              {submitting ? "Adding..." : "Add Task"}
+            </button>
+            &nbsp;
+            <button type="button" onClick={loadTasks} disabled={loading}>
+              Refresh
+            </button>
+            <button type="button" onClick={loadArchivedTasks} disabled={loading}>
+              Load Archived
+            </button>
+          </div>
         </form>
       </section>
 

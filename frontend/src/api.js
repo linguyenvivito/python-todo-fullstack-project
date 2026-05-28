@@ -27,6 +27,10 @@ export function getTasks() {
   return request("/tasks");
 }
 
+export function getTasksByStatus(status) {
+  return request(`/tasks/status/${status}`);
+}
+
 export function createTask(payload) {
   return request("/tasks", {
     method: "POST",

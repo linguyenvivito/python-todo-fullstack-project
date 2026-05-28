@@ -50,6 +50,15 @@ def get_task_by_name(task_name: str, service: TaskService = Depends(get_task_ser
     except InvalidTaskSearchError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
 
+# Get tasks by status
+@router.get("/status/{task_status}", response_model=List[TaskResponse])
+def get_tasks_by_status(task_status: str, service: TaskService = Depends(get_task_service)) -> List[TaskResponse]:
+    try:
+        tasks = service.get_tasks_by_status(task_status)
+        return [TaskResponse.model_validate(task, from_attributes=True) for task in tasks]
+    except InvalidTaskSearchError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+
 @router.patch("/{task_id}", response_model=TaskResponse)
 def update_task(
     task_id: int,

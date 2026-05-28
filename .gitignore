@@ -9,6 +9,11 @@ htmlcov/
 # Local database
 *.db
 
+# Local secrets / env
+.env
+.env.local
+.env.*.local
+
 # Node / frontend
 frontend/node_modules/
 frontend/dist/

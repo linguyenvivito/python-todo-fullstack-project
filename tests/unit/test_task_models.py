@@ -40,6 +40,12 @@ def test_task_update_request_allows_partial_fields() -> None:
     assert payload.description is None
 
 
+def test_task_update_request_allows_archived_status() -> None:
+    payload = TaskUpdateRequest(status=TaskStatus.ARCHIVED)
+
+    assert payload.status == TaskStatus.ARCHIVED
+
+
 def test_task_response_validates_output_shape() -> None:
     response = TaskResponse(id=1, title="Task", description=None, status=TaskStatus.TODO)
 

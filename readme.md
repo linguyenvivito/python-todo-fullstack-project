@@ -31,8 +31,18 @@ From project root:
 # 2) Install Python dependencies
 pip install -r requirements.txt
 
+# 2.5) (Optional) Local secret env file
+Copy-Item .env.example .env
+# Then edit .env and set DATABASE_URL
+
 # 3) Run API server
 uvicorn main:app --reload --host 127.0.0.1 --port 8888
+```
+
+If you are using a local `.env` file, run with:
+
+```powershell
+uvicorn main:app --reload --host 127.0.0.1 --port 8888 --env-file .env
 ```
 
 API docs:
@@ -73,6 +83,7 @@ Task status values:
 - `todo`
 - `in_progress`
 - `done`
+- `archived`
 
 Example create payload:
 
@@ -135,6 +146,13 @@ Example PostgreSQL value:
 
 ```powershell
 $env:DATABASE_URL = "postgresql://postgres:your_password@localhost:5432/tasks_db"
+```
+
+Permanent secret for this Windows user (not in git):
+
+```powershell
+setx DATABASE_URL "postgresql://username:password@host:5432/database?sslmode=require"
+# Restart terminal after setx
 ```
 
 

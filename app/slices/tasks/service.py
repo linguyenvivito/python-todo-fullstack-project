@@ -36,6 +36,14 @@ class TaskService:
                 return task
         raise TaskNotFoundByNameError(normalized_name)
 
+    def get_tasks_by_status(self, status: str) -> List[Task]:
+        normalized_status = status.strip().lower()
+        if normalized_status not in {"todo", "in_progress", "done", "archived"}:
+            raise InvalidTaskSearchError()
+
+        tasks = self._repository.get_by_status(normalized_status)
+        return [task for task in tasks if task.status == normalized_status]
+
     def update_task(self, task_id: int, payload: TaskUpdateRequest) -> Task:
         task = self.get_task(task_id)
 
