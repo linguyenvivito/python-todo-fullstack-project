@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { createTask, deleteTask, getTasks, getTasksByStatus, updateTask } from "../api/tasksApi";
 import { isArchivedStatus, STATUS_ORDER } from "./taskStatus";
 
-export function useTasks(isAuthenticated) {
+export function useTasks(accessToken) {
+  const isAuthenticated = Boolean(accessToken);
   const [tasks, setTasks] = useState([]);
   const [showArchivedOnly, setShowArchivedOnly] = useState(false);
   const [title, setTitle] = useState("");
@@ -16,7 +17,7 @@ export function useTasks(isAuthenticated) {
       setLoading(true);
       setError("");
       setShowArchivedOnly(false);
-      const data = await getTasks();
+      const data = await getTasks(accessToken);
       setTasks(data);
     } catch (err) {
       setError(err.message || "Failed to load tasks");
@@ -30,7 +31,7 @@ export function useTasks(isAuthenticated) {
       setLoading(true);
       setError("");
       setShowArchivedOnly(true);
-      const data = await getTasksByStatus("archived");
+      const data = await getTasksByStatus(accessToken, "archived");
       setTasks(data);
     } catch (err) {
       setError(err.message || "Failed to load archived tasks");
@@ -49,7 +50,7 @@ export function useTasks(isAuthenticated) {
     try {
       setSubmitting(true);
       setError("");
-      await createTask({
+      await createTask(accessToken, {
         title: title.trim(),
         description: description.trim() || null,
       });
@@ -66,7 +67,7 @@ export function useTasks(isAuthenticated) {
   async function changeTaskStatus(task, newStatus) {
     try {
       setError("");
-      await updateTask(task.id, { status: newStatus });
+      await updateTask(accessToken, task.id, { status: newStatus });
       if (isArchivedStatus(newStatus)) {
         await loadArchivedTasks();
       } else {
@@ -80,7 +81,7 @@ export function useTasks(isAuthenticated) {
   async function removeTask(taskId) {
     try {
       setError("");
-      await deleteTask(taskId);
+      await deleteTask(accessToken, taskId);
       await loadTasks();
     } catch (err) {
       setError(err.message || "Failed to delete task");
@@ -98,7 +99,7 @@ export function useTasks(isAuthenticated) {
     }
 
     loadTasks();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, accessToken]);
 
   const groupedTasks = useMemo(() => {
     const visibleStatuses = showArchivedOnly

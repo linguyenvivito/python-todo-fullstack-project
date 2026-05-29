@@ -108,6 +108,30 @@ Run a specific file:
 pytest tests/test_tasks_api.py -v
 ```
 
+## Seed Data
+
+Seed a demo user and sample `todo` tasks:
+
+```powershell
+.\.venv\Scripts\python.exe seed_tasks.py
+```
+
+Default seeded login credentials:
+
+- username: `demo`
+- password: `demo123`
+
+Re-seed and replace existing tasks for the demo user:
+
+```powershell
+.\.venv\Scripts\python.exe seed_tasks.py --force
+```
+
+Optional overrides:
+
+- `SEED_DEMO_USERNAME`
+- `SEED_DEMO_PASSWORD`
+
 ## Coverage
 
 Generate terminal + HTML coverage report:
@@ -164,7 +188,7 @@ setx DATABASE_URL "postgresql://username:password@host:5432/database?sslmode=req
 # Production
 
 ## Live Back End URL
-https://python-todo-fullstack-project.onrender.com
+https://python-todo-fullstack-project.onrender.com/docs
 
 ## Live Front End URL
 https://linguyenvivito.github.io/python-todo-fullstack-project

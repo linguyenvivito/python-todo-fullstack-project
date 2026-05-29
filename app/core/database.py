@@ -1,6 +1,7 @@
 import os
 import sqlite3
 from contextlib import contextmanager
+from typing import Any, cast
 
 try:
     import psycopg
@@ -47,25 +48,74 @@ def init_database() -> None:
             try:
                 cursor.execute(
                     """
+                    CREATE TABLE IF NOT EXISTS users (
+                        id BIGSERIAL PRIMARY KEY,
+                        username TEXT NOT NULL UNIQUE,
+                        password_hash TEXT NOT NULL
+                    );
+
                     CREATE TABLE IF NOT EXISTS tasks (
                         id BIGSERIAL PRIMARY KEY,
+                        title TEXT NOT NULL,
+                        description TEXT NULL,
+                        status TEXT NOT NULL,
+                        user_id BIGINT NULL REFERENCES users(id) ON DELETE CASCADE
+                    );
+
+                    ALTER TABLE tasks
+                    ADD COLUMN IF NOT EXISTS user_id BIGINT NULL REFERENCES users(id) ON DELETE CASCADE;
+
+                    CREATE INDEX IF NOT EXISTS idx_tasks_user_id
+                    ON tasks(user_id);
+                    """
+                )
+            finally:
+                cursor.close()
+        else:
+            sqlite_connection = cast(Any, connection)
+            if hasattr(sqlite_connection, "executescript"):
+                sqlite_connection.executescript(
+                    """
+                    CREATE TABLE IF NOT EXISTS users (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        username TEXT NOT NULL UNIQUE,
+                        password_hash TEXT NOT NULL
+                    );
+
+                    CREATE TABLE IF NOT EXISTS tasks (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        title TEXT NOT NULL,
+                        description TEXT NULL,
+                        status TEXT NOT NULL,
+                        user_id INTEGER NULL,
+                        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                    );
+                    """
+                )
+                pragma_result = sqlite_connection.execute("PRAGMA table_info(tasks)")
+                columns = (
+                    pragma_result.fetchall()
+                    if pragma_result is not None and hasattr(pragma_result, "fetchall")
+                    else []
+                )
+                column_names = {column[1] for column in columns}
+                if "user_id" not in column_names:
+                    sqlite_connection.execute("ALTER TABLE tasks ADD COLUMN user_id INTEGER NULL")
+                sqlite_connection.execute(
+                    """
+                    CREATE INDEX IF NOT EXISTS idx_tasks_user_id
+                    ON tasks(user_id)
+                    """
+                )
+            else:
+                sqlite_connection.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS tasks (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
                         title TEXT NOT NULL,
                         description TEXT NULL,
                         status TEXT NOT NULL
                     )
                     """
                 )
-            finally:
-                cursor.close()
-        else:
-            connection.execute(
-                """
-                CREATE TABLE IF NOT EXISTS tasks (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    title TEXT NOT NULL,
-                    description TEXT NULL,
-                    status TEXT NOT NULL
-                )
-                """
-            )
         connection.commit()

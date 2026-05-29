@@ -1,13 +1,26 @@
-export const AUTH_SESSION_KEY = "fluxboard.auth.user";
+export const AUTH_SESSION_KEY = "fluxboard.auth.session";
 
-export function getStoredUser() {
-  return sessionStorage.getItem(AUTH_SESSION_KEY) || "";
+export function getStoredSession() {
+  const rawSession = sessionStorage.getItem(AUTH_SESSION_KEY);
+  if (!rawSession) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(rawSession);
+    if (!parsed?.username || !parsed?.accessToken) {
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
 }
 
-export function storeUser(username) {
-  sessionStorage.setItem(AUTH_SESSION_KEY, username);
+export function storeSession(authSession) {
+  sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(authSession));
 }
 
-export function clearStoredUser() {
+export function clearStoredSession() {
   sessionStorage.removeItem(AUTH_SESSION_KEY);
 }

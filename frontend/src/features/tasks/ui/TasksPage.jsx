@@ -1,7 +1,7 @@
 import { STATUS_LABELS, STATUS_ORDER } from "../model/taskStatus";
 import { useTasks } from "../model/useTasks";
 
-export default function TasksPage({ authUser, onLogout }) {
+export default function TasksPage({ authUser, accessToken, onLogout }) {
   const {
     title,
     setTitle,
@@ -16,16 +16,16 @@ export default function TasksPage({ authUser, onLogout }) {
     createNewTask,
     changeTaskStatus,
     removeTask,
-  } = useTasks(true);
+  } = useTasks(accessToken);
 
   return (
     <div className="page-shell">
       <header className="hero">
         <p className="hero-kicker">Task Management API</p>
         <h1>Fluxboard</h1>
-        <small className="version">v0.2</small>
+        <small className="version">v0.3</small>
         <p className="hero-subtitle">
-          A live React interface for your FastAPI + SQLite task service.
+          A live React interface for your FastAPI + PostgreSQL task service.
         </p>
         <div className="hero-meta">
           <span>Signed in as {authUser}</span>

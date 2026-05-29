@@ -88,6 +88,11 @@ body {
   box-shadow: 3px 3px 0 var(--line);
 }
 
+.auth-form .auth-secondary {
+  background: #fff;
+  color: var(--ink);
+}
+
 .page-shell {
   width: min(1100px, 92vw);
   margin: 0 auto;

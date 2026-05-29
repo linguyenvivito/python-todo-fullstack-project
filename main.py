@@ -4,6 +4,7 @@ from typing import Dict
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.slices.auth.router import router as auth_router
 from app.slices.tasks.router import router as tasks_router
 
 
@@ -27,6 +28,7 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    app.include_router(auth_router)
     app.include_router(tasks_router)
     return app
 

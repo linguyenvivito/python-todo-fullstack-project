@@ -1,10 +1,11 @@
 import { useState } from "react";
 
-export default function LoginView({ onLogin }) {
+export default function LoginView({ onLogin, onRegister }) {
   const [loginUsername, setLoginUsername] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [loginSubmitting, setLoginSubmitting] = useState(false);
   const [loginError, setLoginError] = useState("");
+  const [mode, setMode] = useState("login");
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -12,7 +13,11 @@ export default function LoginView({ onLogin }) {
     try {
       setLoginSubmitting(true);
       setLoginError("");
-      await onLogin(loginUsername, loginPassword);
+      if (mode === "register") {
+        await onRegister(loginUsername, loginPassword);
+      } else {
+        await onLogin(loginUsername, loginPassword);
+      }
       setLoginPassword("");
     } catch (err) {
       setLoginError(err.message || "Unable to sign in");
@@ -26,7 +31,11 @@ export default function LoginView({ onLogin }) {
       <section className="auth-card">
         <p className="hero-kicker">Task Management API</p>
         <h1>Welcome to Fluxboard</h1>
-        <p className="hero-subtitle">Sign in to continue to your todo workspace.</p>
+        <p className="hero-subtitle">
+          {mode === "register"
+            ? "Create an account to start managing your tasks."
+            : "Sign in to continue to your todo workspace."}
+        </p>
         <form onSubmit={handleSubmit} className="auth-form">
           <label>
             Username
@@ -50,7 +59,17 @@ export default function LoginView({ onLogin }) {
           </label>
           {loginError && <p className="status-banner error">{loginError}</p>}
           <button type="submit" disabled={loginSubmitting}>
-            {loginSubmitting ? "Signing in..." : "Sign In"}
+            {loginSubmitting ? "Please wait..." : mode === "register" ? "Create Account" : "Sign In"}
+          </button>
+          <button
+            type="button"
+            className="auth-secondary"
+            onClick={() => {
+              setMode(mode === "login" ? "register" : "login");
+              setLoginError("");
+            }}
+          >
+            {mode === "login" ? "Need an account? Register" : "Already have an account? Sign in"}
           </button>
         </form>
       </section>

@@ -3,11 +3,11 @@ import { useAuthSession } from "../features/auth/model/useAuthSession";
 import TasksPage from "../features/tasks/ui/TasksPage";
 
 export default function App() {
-  const { authUser, login, logout } = useAuthSession();
+  const { authUser, accessToken, login, register, logout } = useAuthSession();
 
   if (!authUser) {
-    return <LoginView onLogin={login} />;
+    return <LoginView onLogin={login} onRegister={register} />;
   }
 
-  return <TasksPage authUser={authUser} onLogout={logout} />;
+  return <TasksPage authUser={authUser} accessToken={accessToken} onLogout={logout} />;
 }

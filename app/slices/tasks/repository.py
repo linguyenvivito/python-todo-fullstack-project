@@ -15,14 +15,19 @@ class TaskRepository:
 
     @staticmethod
     def _row_to_task(row) -> Task:
+        user_id = None
+        if hasattr(row, "keys") and "user_id" in row.keys():
+            user_id = row["user_id"]
+
         return Task(
             id=row["id"],
             title=row["title"],
             description=row["description"],
             status=TaskStatus(row["status"]),
+            user_id=user_id,
         )
 
-    def create(self, title: str, description: Optional[str] = None) -> Task:
+    def create(self, title: str, description: Optional[str] = None, user_id: int = 0) -> Task:
         with get_connection() as connection:
             if use_postgres():
                 if dict_row is None:
@@ -35,11 +40,11 @@ class TaskRepository:
                 try:
                     cursor.execute(
                         """
-                        INSERT INTO tasks (title, description, status)
-                        VALUES (%s, %s, %s)
+                        INSERT INTO tasks (title, description, status, user_id)
+                        VALUES (%s, %s, %s, %s)
                         RETURNING id
                         """,
-                        (title, description, TaskStatus.TODO.value),
+                        (title, description, TaskStatus.TODO.value, user_id),
                     )
                     row = cursor.fetchone()
                     if row is None:
@@ -49,8 +54,8 @@ class TaskRepository:
                     cursor.close()
             else:
                 cursor = connection.execute(
-                    "INSERT INTO tasks (title, description, status) VALUES (?, ?, ?)",
-                    (title, description, TaskStatus.TODO.value),
+                    "INSERT INTO tasks (title, description, status, user_id) VALUES (?, ?, ?, ?)",
+                    (title, description, TaskStatus.TODO.value, user_id),
                 )
                 task_id = int(cast(Any, cursor).lastrowid or 0)
             connection.commit()
@@ -60,9 +65,10 @@ class TaskRepository:
             title=title,
             description=description,
             status=TaskStatus.TODO,
+            user_id=user_id,
         )
 
-    def list_all(self) -> List[Task]:
+    def list_all(self, user_id: int = 0) -> List[Task]:
         with get_connection() as connection:
             if use_postgres():
                 if dict_row is None:
@@ -74,19 +80,31 @@ class TaskRepository:
                 cursor = pg_connection.cursor(row_factory=dict_row)
                 try:
                     cursor.execute(
-                        "SELECT id, title, description, status FROM tasks ORDER BY id"
+                        """
+                        SELECT id, title, description, status, user_id
+                        FROM tasks
+                        WHERE user_id = %s
+                        ORDER BY id
+                        """,
+                        (user_id,),
                     )
                     rows = cursor.fetchall()
                 finally:
                     cursor.close()
             else:
                 rows = connection.execute(
-                    "SELECT id, title, description, status FROM tasks ORDER BY id"
+                    """
+                    SELECT id, title, description, status, user_id
+                    FROM tasks
+                    WHERE user_id = ?
+                    ORDER BY id
+                    """,
+                    (user_id,),
                 ).fetchall()
 
         return [self._row_to_task(row) for row in rows]
 
-    def get_by_id(self, task_id: int) -> Optional[Task]:
+    def get_by_id(self, task_id: int, user_id: int = 0) -> Optional[Task]:
         with get_connection() as connection:
             if use_postgres():
                 if dict_row is None:
@@ -98,23 +116,31 @@ class TaskRepository:
                 cursor = pg_connection.cursor(row_factory=dict_row)
                 try:
                     cursor.execute(
-                        "SELECT id, title, description, status FROM tasks WHERE id = %s",
-                        (task_id,),
+                        """
+                        SELECT id, title, description, status, user_id
+                        FROM tasks
+                        WHERE id = %s AND user_id = %s
+                        """,
+                        (task_id, user_id),
                     )
                     row = cursor.fetchone()
                 finally:
                     cursor.close()
             else:
                 row = connection.execute(
-                    "SELECT id, title, description, status FROM tasks WHERE id = ?",
-                    (task_id,),
+                    """
+                    SELECT id, title, description, status, user_id
+                    FROM tasks
+                    WHERE id = ? AND user_id = ?
+                    """,
+                    (task_id, user_id),
                 ).fetchone()
 
         if row is None:
             return None
         return self._row_to_task(row)
 
-    def get_by_status(self, status: str) -> List[Task]:
+    def get_by_status(self, status: str, user_id: int = 0) -> List[Task]:
         with get_connection() as connection:
             if use_postgres():
                 if dict_row is None:
@@ -126,16 +152,24 @@ class TaskRepository:
                 cursor = pg_connection.cursor(row_factory=dict_row)
                 try:
                     cursor.execute(
-                        "SELECT id, title, description, status FROM tasks WHERE status = %s",
-                        (status,),
+                        """
+                        SELECT id, title, description, status, user_id
+                        FROM tasks
+                        WHERE status = %s AND user_id = %s
+                        """,
+                        (status, user_id),
                     )
                     rows = cursor.fetchall()
                 finally:
                     cursor.close()
             else:
                 rows = connection.execute(
-                    "SELECT id, title, description, status FROM tasks WHERE status = ?",
-                    (status,),
+                    """
+                    SELECT id, title, description, status, user_id
+                    FROM tasks
+                    WHERE status = ? AND user_id = ?
+                    """,
+                    (status, user_id),
                 ).fetchall()
 
         return [self._row_to_task(row) for row in rows]
@@ -145,36 +179,56 @@ class TaskRepository:
             if use_postgres():
                 cursor = connection.cursor()
                 try:
-                    cursor.execute(
-                        """
-                        UPDATE tasks
-                        SET title = %s, description = %s, status = %s
-                        WHERE id = %s
-                        """,
-                        (task.title, task.description, task.status.value, task.id),
-                    )
+                    if task.user_id is None:
+                        cursor.execute(
+                            """
+                            UPDATE tasks
+                            SET title = %s, description = %s, status = %s
+                            WHERE id = %s
+                            """,
+                            (task.title, task.description, task.status.value, task.id),
+                        )
+                    else:
+                        cursor.execute(
+                            """
+                            UPDATE tasks
+                            SET title = %s, description = %s, status = %s
+                            WHERE id = %s AND user_id = %s
+                            """,
+                            (task.title, task.description, task.status.value, task.id, task.user_id),
+                        )
                 finally:
                     cursor.close()
             else:
-                connection.execute(
-                    """
-                    UPDATE tasks
-                    SET title = ?, description = ?, status = ?
-                    WHERE id = ?
-                    """,
-                    (task.title, task.description, task.status.value, task.id),
-                )
+                if task.user_id is None:
+                    connection.execute(
+                        """
+                        UPDATE tasks
+                        SET title = ?, description = ?, status = ?
+                        WHERE id = ?
+                        """,
+                        (task.title, task.description, task.status.value, task.id),
+                    )
+                else:
+                    connection.execute(
+                        """
+                        UPDATE tasks
+                        SET title = ?, description = ?, status = ?
+                        WHERE id = ? AND user_id = ?
+                        """,
+                        (task.title, task.description, task.status.value, task.id, task.user_id),
+                    )
             connection.commit()
         return task
 
-    def delete(self, task_id: int) -> None:
+    def delete(self, task_id: int, user_id: int = 0) -> None:
         with get_connection() as connection:
             if use_postgres():
                 cursor = connection.cursor()
                 try:
-                    cursor.execute("DELETE FROM tasks WHERE id = %s", (task_id,))
+                    cursor.execute("DELETE FROM tasks WHERE id = %s AND user_id = %s", (task_id, user_id))
                 finally:
                     cursor.close()
             else:
-                connection.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+                connection.execute("DELETE FROM tasks WHERE id = ? AND user_id = ?", (task_id, user_id))
             connection.commit()

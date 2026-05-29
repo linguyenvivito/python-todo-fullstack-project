@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { clearStoredUser, getStoredUser, storeUser } from "./session";
+import { loginUser, registerUser } from "../api/authApi";
+import { clearStoredSession, getStoredSession, storeSession } from "./session";
 
 export function useAuthSession() {
-  const [authUser, setAuthUser] = useState(() => getStoredUser());
+  const [authSession, setAuthSession] = useState(() => getStoredSession());
 
-  function login(rawUsername, rawPassword) {
+  async function login(rawUsername, rawPassword) {
     const username = rawUsername.trim();
     const password = rawPassword.trim();
 
@@ -12,18 +13,38 @@ export function useAuthSession() {
       throw new Error("Username and password are required");
     }
 
-    storeUser(username);
-    setAuthUser(username);
+    const payload = await loginUser(username, password);
+    const nextSession = {
+      username: payload.user.username,
+      accessToken: payload.access_token,
+    };
+
+    storeSession(nextSession);
+    setAuthSession(nextSession);
+  }
+
+  async function register(rawUsername, rawPassword) {
+    const username = rawUsername.trim();
+    const password = rawPassword.trim();
+
+    if (!username || !password) {
+      throw new Error("Username and password are required");
+    }
+
+    await registerUser(username, password);
+    await login(username, password);
   }
 
   function logout() {
-    clearStoredUser();
-    setAuthUser("");
+    clearStoredSession();
+    setAuthSession(null);
   }
 
   return {
-    authUser,
+    authUser: authSession?.username || "",
+    accessToken: authSession?.accessToken || "",
     login,
+    register,
     logout,
   };
 }

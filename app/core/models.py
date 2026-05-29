@@ -16,3 +16,11 @@ class Task:
     title: str
     description: Optional[str]
     status: TaskStatus
+    user_id: Optional[int] = None
+
+
+@dataclass
+class User:
+    id: int
+    username: str
+    password_hash: str
