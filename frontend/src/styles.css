@@ -25,6 +25,69 @@ body {
     linear-gradient(135deg, #efe6db, var(--bg-base));
 }
 
+#root {
+  min-height: 100vh;
+}
+
+.auth-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+}
+
+.auth-card {
+  width: min(520px, 95vw);
+  border: 2px solid var(--line);
+  background: var(--bg-soft);
+  border-radius: 18px;
+  padding: 1.4rem;
+  box-shadow: 7px 7px 0 var(--line);
+  animation: fade-in 450ms ease;
+}
+
+.auth-card h1 {
+  margin: 0.4rem 0 0;
+  font-size: clamp(1.7rem, 4vw, 2.3rem);
+}
+
+.auth-form {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.auth-form label {
+  display: grid;
+  gap: 0.35rem;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+.auth-form input {
+  width: 100%;
+  border: 2px solid var(--line);
+  background: #fff;
+  border-radius: 12px;
+  padding: 0.7rem 0.8rem;
+  font: inherit;
+  color: var(--ink);
+}
+
+.auth-form button {
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  padding: 0.6rem 1rem;
+  background: var(--accent);
+  color: #fff;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.9rem;
+  width: fit-content;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 var(--line);
+}
+
 .page-shell {
   width: min(1100px, 92vw);
   margin: 0 auto;
@@ -59,6 +122,31 @@ body {
   margin: 0.65rem 0 0;
   color: var(--ink-muted);
   max-width: 62ch;
+}
+
+.hero-meta {
+  margin-top: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.hero-meta span {
+  color: var(--ink-muted);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.85rem;
+}
+
+.hero-meta button {
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+  background: #fff;
+  color: var(--ink);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.8rem;
+  cursor: pointer;
 }
 
 .composer {
@@ -105,7 +193,9 @@ select {
 }
 
 .composer-form button:hover,
-.card-actions button:hover {
+.card-actions button:hover,
+.auth-form button:hover,
+.hero-meta button:hover {
   transform: translate(-1px, -1px);
 }
 
@@ -244,5 +334,10 @@ select {
 
   .page-shell {
     padding-top: 1.2rem;
+  }
+
+  .hero-meta {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
