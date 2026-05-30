@@ -1,3 +1,4 @@
+import logging
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
@@ -11,6 +12,7 @@ from app.slices.tasks.repository import TaskRepository
 from app.slices.tasks.service import TaskService
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
+logger = logging.getLogger("app.api.tasks")
 
 _repository = TaskRepository()
 _service = TaskService(_repository)
@@ -33,6 +35,7 @@ def create_task(
         if current_user.id
         else service.create_task(payload)
     )
+    logger.info("create task success task_id=%s user_id=%s", task.id, current_user.id or 0)
     return TaskResponse.model_validate(task, from_attributes=True)
 
 
@@ -42,6 +45,7 @@ def list_tasks(
     current_user: User = Depends(get_request_user),
 ) -> List[TaskResponse]:
     tasks = service.list_tasks(current_user.id) if current_user.id else service.list_tasks()
+    logger.info("list tasks success count=%s user_id=%s", len(tasks), current_user.id or 0)
     return [TaskResponse.model_validate(task, from_attributes=True) for task in tasks]
 
 
@@ -57,8 +61,10 @@ def get_task(
             if current_user.id
             else service.get_task(task_id)
         )
+        logger.info("get task success task_id=%s user_id=%s", task_id, current_user.id or 0)
         return TaskResponse.model_validate(task, from_attributes=True)
     except TaskNotFoundError as exc:
+        logger.warning("get task not found task_id=%s user_id=%s", task_id, current_user.id or 0)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
 
 @router.get("/name/{task_name}", response_model=TaskResponse)
@@ -73,10 +79,13 @@ def get_task_by_name(
             if current_user.id
             else service.get_task_by_name(task_name)
         )
+        logger.info("get task by name success user_id=%s", current_user.id or 0)
         return TaskResponse.model_validate(task, from_attributes=True)
     except TaskNotFoundByNameError as exc:
+        logger.warning("get task by name not found user_id=%s", current_user.id or 0)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
     except InvalidTaskSearchError as exc:
+        logger.warning("get task by name invalid search user_id=%s", current_user.id or 0)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
 
 # Get tasks by status
@@ -92,8 +101,15 @@ def get_tasks_by_status(
             if current_user.id
             else service.get_tasks_by_status(task_status)
         )
+        logger.info(
+            "get tasks by status success status=%s count=%s user_id=%s",
+            task_status,
+            len(tasks),
+            current_user.id or 0,
+        )
         return [TaskResponse.model_validate(task, from_attributes=True) for task in tasks]
     except InvalidTaskSearchError as exc:
+        logger.warning("get tasks by status invalid status=%s user_id=%s", task_status, current_user.id or 0)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
 
 @router.patch("/{task_id}", response_model=TaskResponse)
@@ -111,8 +127,10 @@ def update_task(
             if current_user.id
             else service.update_task(task_id, payload)
         )
+        logger.info("update task success task_id=%s user_id=%s", task_id, current_user.id or 0)
         return TaskResponse.model_validate(task, from_attributes=True)
     except TaskNotFoundError as exc:
+        logger.warning("update task not found task_id=%s user_id=%s", task_id, current_user.id or 0)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
 
 
@@ -129,6 +147,8 @@ def delete_task(
             service.delete_task(task_id, user_id=current_user.id)
         else:
             service.delete_task(task_id)
+        logger.info("delete task success task_id=%s user_id=%s", task_id, current_user.id or 0)
         return Response(status_code=status.HTTP_204_NO_CONTENT)
     except TaskNotFoundError as exc:
+        logger.warning("delete task not found task_id=%s user_id=%s", task_id, current_user.id or 0)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))

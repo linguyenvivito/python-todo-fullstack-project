@@ -30,3 +30,28 @@ def test_security_headers_can_be_disabled(monkeypatch) -> None:
     assert "Referrer-Policy" not in response.headers
     assert "Permissions-Policy" not in response.headers
     assert "Content-Security-Policy" not in response.headers
+
+
+def test_docs_use_docs_compatible_csp(monkeypatch) -> None:
+    monkeypatch.setenv("SECURITY_HEADERS_ENABLED", "true")
+    client = TestClient(create_app())
+
+    response = client.get("/docs")
+
+    assert response.status_code == 200
+    csp = response.headers.get("Content-Security-Policy")
+    assert csp is not None
+    assert "https://cdn.jsdelivr.net" in csp
+    assert "https://fastapi.tiangolo.com" in csp
+    assert "connect-src 'self' https://cdn.jsdelivr.net" in csp
+    assert "'unsafe-inline'" in csp
+
+
+def test_non_docs_endpoints_keep_strict_csp(monkeypatch) -> None:
+    monkeypatch.setenv("SECURITY_HEADERS_ENABLED", "true")
+    client = TestClient(create_app())
+
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    assert response.headers.get("Content-Security-Policy") == "default-src 'self'; frame-ancestors 'none'"

@@ -173,6 +173,10 @@ CI runs on push and pull request:
 - `CSRF_TRUSTED_ORIGINS` (optional): comma-separated trusted origins for CSRF validation. Defaults to `CORS_ALLOW_ORIGINS`.
 - `SECURITY_HEADERS_ENABLED` (optional): enables standard security headers middleware. Default `true`.
 - `SECURITY_HSTS_ENABLED` (optional): enables `Strict-Transport-Security` header for HTTPS requests. Default `true`.
+- `REQUEST_LOGGING_ENABLED` (optional): enables app request logging middleware. Default `true`.
+- `LOG_LEVEL` (optional): Python log level for app logging, default `INFO`.
+- `LOG_FORMAT` (optional): Python logging format string.
+- `LOG_JSON` (optional): emits structured JSON logs to stdout when `true`. Default `false`.
 - `RATE_LIMITING_ENABLED` (optional): enables SlowAPI rate limiting. Default `true`.
 - `RATE_LIMIT_AUTH_REGISTER` (optional): register endpoint rate, default `30/minute`.
 - `RATE_LIMIT_AUTH_LOGIN` (optional): login endpoint rate, default `30/minute`.

@@ -1,4 +1,5 @@
 import os
+import logging
 from typing import Dict
 
 from fastapi import FastAPI
@@ -9,21 +10,33 @@ from slowapi.middleware import SlowAPIMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
+from app.core.logging_config import configure_logging
 from app.core.rate_limit import limiter
 from app.middleware.cors_restriction import CorsRestrictionMiddleware
 from app.middleware.csrf_protection import CsrfProtectionMiddleware
+from app.middleware.request_logging import RequestLoggingMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
 from app.slices.auth.router import router as auth_router
 from app.slices.tasks.router import router as tasks_router
 
+logger = logging.getLogger("app.security.rate_limit")
+
 
 def _handle_rate_limit_exceeded(request: Request, exc: Exception) -> Response:
     if isinstance(exc, RateLimitExceeded):
+        client_host = request.client.host if request.client else "unknown"
+        logger.warning(
+            "rate limit exceeded method=%s path=%s client=%s",
+            request.method,
+            request.url.path,
+            client_host,
+        )
         return _rate_limit_exceeded_handler(request, exc)
     raise exc
 
 
 def create_app() -> FastAPI:
+    configure_logging()
     app = FastAPI(title="Task Management API")
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _handle_rate_limit_exceeded)
@@ -51,7 +64,15 @@ def create_app() -> FastAPI:
     security_hsts_enabled = (
         os.getenv("SECURITY_HSTS_ENABLED", "true").strip().lower() == "true"
     )
+    request_logging_enabled = (
+        os.getenv("REQUEST_LOGGING_ENABLED", "true").strip().lower() == "true"
+    )
     strict_origin_check = os.getenv("CORS_STRICT_ORIGIN_CHECK", "true").strip().lower() == "true"
+
+    app.add_middleware(
+        RequestLoggingMiddleware,
+        enabled=request_logging_enabled,
+    )
 
     app.add_middleware(
         SecurityHeadersMiddleware,

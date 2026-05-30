@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from app.core.rate_limit import limiter, rate_limit
@@ -18,6 +20,7 @@ from app.slices.auth.service import (
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+logger = logging.getLogger("app.api.auth")
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -30,8 +33,10 @@ def register_user(
     try:
         user = auth_service.register_user(payload.username, payload.password)
     except UserAlreadyExistsError as exc:
+        logger.warning("register conflict username=%s", payload.username)
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc))
 
+    logger.info("register success user_id=%s username=%s", user.id, user.username)
     return UserResponse(id=user.id, username=user.username)
 
 
@@ -45,9 +50,11 @@ def login(
     try:
         user = auth_service.authenticate(payload.username, payload.password)
     except InvalidCredentialsError as exc:
+        logger.warning("login failed username=%s", payload.username)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc))
 
     access_token, refresh_token = auth_service.create_token_pair_for_user(user)
+    logger.info("login success user_id=%s username=%s", user.id, user.username)
     return TokenResponse(
         access_token=access_token,
         refresh_token=refresh_token,
@@ -67,8 +74,10 @@ def refresh_token(
             payload.refresh_token
         )
     except InvalidRefreshTokenError as exc:
+        logger.warning("refresh failed")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc))
 
+    logger.info("refresh success user_id=%s username=%s", user.id, user.username)
     return TokenResponse(
         access_token=access_token,
         refresh_token=rotated_refresh_token,
@@ -86,4 +95,7 @@ def revoke_token(
     try:
         auth_service.revoke_refresh_token(payload.refresh_token)
     except InvalidRefreshTokenError as exc:
+        logger.warning("revoke failed")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc))
+
+    logger.info("revoke success")
