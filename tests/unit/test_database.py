@@ -98,8 +98,8 @@ def test_init_database_sqlite_executes_create_and_commit(monkeypatch) -> None:
 
     database_module.init_database()
 
-    assert len(fake_connection.executed_sql) == 1
-    assert "AUTOINCREMENT" in fake_connection.executed_sql[0]
+    assert any("AUTOINCREMENT" in sql for sql in fake_connection.executed_sql)
+    assert any("refresh_tokens" in sql for sql in fake_connection.executed_sql)
     assert fake_connection.commit_calls == 1
 
 
@@ -139,5 +139,6 @@ def test_init_database_postgres_uses_cursor_and_closes(monkeypatch) -> None:
 
     assert len(fake_connection.cursor_obj.executed_sql) == 1
     assert "BIGSERIAL" in fake_connection.cursor_obj.executed_sql[0]
+    assert "refresh_tokens" in fake_connection.cursor_obj.executed_sql[0]
     assert fake_connection.cursor_obj.closed is True
     assert fake_connection.commit_calls == 1

@@ -3,12 +3,13 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.core.models import User
 from app.core.security import TokenDecodeError, decode_access_token
-from app.slices.auth.repository import UserRepository
+from app.slices.auth.repository import RefreshTokenRepository, UserRepository
 from app.slices.auth.service import AuthService
 
 _bearer = HTTPBearer(auto_error=False)
 _repository = UserRepository()
-_service = AuthService(_repository)
+_refresh_token_repository = RefreshTokenRepository()
+_service = AuthService(_repository, _refresh_token_repository)
 
 
 def get_auth_service() -> AuthService:

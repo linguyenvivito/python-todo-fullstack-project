@@ -4,6 +4,7 @@ from app.slices.auth.dependencies import get_auth_service
 from app.slices.auth.models import (
     LoginRequest,
     RefreshTokenRequest,
+    RevokeTokenRequest,
     RegisterRequest,
     TokenResponse,
     UserResponse,
@@ -55,12 +56,25 @@ def refresh_token(
     auth_service: AuthService = Depends(get_auth_service),
 ) -> TokenResponse:
     try:
-        access_token, user = auth_service.refresh_access_token(payload.refresh_token)
+        access_token, rotated_refresh_token, user = auth_service.refresh_access_token(
+            payload.refresh_token
+        )
     except InvalidRefreshTokenError as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc))
 
     return TokenResponse(
         access_token=access_token,
-        refresh_token=payload.refresh_token,
+        refresh_token=rotated_refresh_token,
         user=UserResponse(id=user.id, username=user.username),
     )
+
+
+@router.post("/revoke", status_code=status.HTTP_204_NO_CONTENT)
+def revoke_token(
+    payload: RevokeTokenRequest,
+    auth_service: AuthService = Depends(get_auth_service),
+) -> None:
+    try:
+        auth_service.revoke_refresh_token(payload.refresh_token)
+    except InvalidRefreshTokenError as exc:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc))

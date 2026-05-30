@@ -62,11 +62,22 @@ def init_database() -> None:
                         user_id BIGINT NULL REFERENCES users(id) ON DELETE CASCADE
                     );
 
+                    CREATE TABLE IF NOT EXISTS refresh_tokens (
+                        jti TEXT PRIMARY KEY,
+                        user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                        expires_at BIGINT NOT NULL,
+                        revoked_at BIGINT NULL,
+                        replaced_by_jti TEXT NULL
+                    );
+
                     ALTER TABLE tasks
                     ADD COLUMN IF NOT EXISTS user_id BIGINT NULL REFERENCES users(id) ON DELETE CASCADE;
 
                     CREATE INDEX IF NOT EXISTS idx_tasks_user_id
                     ON tasks(user_id);
+
+                    CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id
+                    ON refresh_tokens(user_id);
                     """
                 )
             finally:
@@ -90,6 +101,15 @@ def init_database() -> None:
                         user_id INTEGER NULL,
                         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                     );
+
+                    CREATE TABLE IF NOT EXISTS refresh_tokens (
+                        jti TEXT PRIMARY KEY,
+                        user_id INTEGER NOT NULL,
+                        expires_at INTEGER NOT NULL,
+                        revoked_at INTEGER NULL,
+                        replaced_by_jti TEXT NULL,
+                        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                    );
                     """
                 )
                 pragma_result = sqlite_connection.execute("PRAGMA table_info(tasks)")
@@ -107,6 +127,12 @@ def init_database() -> None:
                     ON tasks(user_id)
                     """
                 )
+                sqlite_connection.execute(
+                    """
+                    CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id
+                    ON refresh_tokens(user_id)
+                    """
+                )
             else:
                 sqlite_connection.execute(
                     """
@@ -116,6 +142,24 @@ def init_database() -> None:
                         description TEXT NULL,
                         status TEXT NOT NULL
                     )
+                    """
+                )
+                sqlite_connection.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS refresh_tokens (
+                        jti TEXT PRIMARY KEY,
+                        user_id INTEGER NOT NULL,
+                        expires_at INTEGER NOT NULL,
+                        revoked_at INTEGER NULL,
+                        replaced_by_jti TEXT NULL,
+                        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                    )
+                    """
+                )
+                sqlite_connection.execute(
+                    """
+                    CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id
+                    ON refresh_tokens(user_id)
                     """
                 )
         connection.commit()

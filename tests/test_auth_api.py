@@ -49,9 +49,44 @@ def test_register_login_and_refresh_flow() -> None:
     refresh_payload = refresh_response.json()
 
     assert refresh_payload["access_token"]
-    assert refresh_payload["refresh_token"] == login_payload["refresh_token"]
+    assert refresh_payload["refresh_token"]
+    assert refresh_payload["refresh_token"] != login_payload["refresh_token"]
     assert refresh_payload["access_token"] != login_payload["access_token"]
     assert refresh_payload["user"]["username"] == "alice"
+
+
+def test_refresh_rejects_reuse_and_revokes_rotated_tokens() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    client.post(
+        "/auth/register",
+        json={"username": "carol", "password": "password123"},
+    )
+    login_response = client.post(
+        "/auth/login",
+        json={"username": "carol", "password": "password123"},
+    )
+    original_refresh_token = login_response.json()["refresh_token"]
+
+    first_rotation = client.post(
+        "/auth/refresh",
+        json={"refresh_token": original_refresh_token},
+    )
+    assert first_rotation.status_code == 200
+    rotated_refresh_token = first_rotation.json()["refresh_token"]
+
+    reused_response = client.post(
+        "/auth/refresh",
+        json={"refresh_token": original_refresh_token},
+    )
+    assert reused_response.status_code == 401
+
+    compromised_response = client.post(
+        "/auth/refresh",
+        json={"refresh_token": rotated_refresh_token},
+    )
+    assert compromised_response.status_code == 401
 
 
 def test_refresh_rejects_invalid_token() -> None:
@@ -86,3 +121,30 @@ def test_refresh_rejects_access_token() -> None:
     )
     assert refresh_response.status_code == 401
     assert refresh_response.json()["detail"] == "Invalid refresh token"
+
+
+def test_revoke_endpoint_invalidates_refresh_token() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    client.post(
+        "/auth/register",
+        json={"username": "dave", "password": "password123"},
+    )
+    login_response = client.post(
+        "/auth/login",
+        json={"username": "dave", "password": "password123"},
+    )
+    refresh_token = login_response.json()["refresh_token"]
+
+    revoke_response = client.post(
+        "/auth/revoke",
+        json={"refresh_token": refresh_token},
+    )
+    assert revoke_response.status_code == 204
+
+    refresh_response = client.post(
+        "/auth/refresh",
+        json={"refresh_token": refresh_token},
+    )
+    assert refresh_response.status_code == 401
