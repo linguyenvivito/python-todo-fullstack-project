@@ -4,6 +4,7 @@ import hmac
 import os
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
+from uuid import uuid4
 
 import jwt
 from jwt import InvalidTokenError
@@ -11,6 +12,7 @@ from jwt import InvalidTokenError
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-this-in-production")
 ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "60"))
+REFRESH_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_REFRESH_EXPIRE_MINUTES", "10080"))
 
 
 class TokenDecodeError(Exception):
@@ -40,13 +42,39 @@ def verify_password(password: str, password_hash: str) -> bool:
 
 def create_access_token(data: Dict[str, Any]) -> str:
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
+    now = datetime.now(timezone.utc)
+    to_encode.update({"token_use": "access"})
+    expire = now + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"iat": now, "exp": expire, "jti": uuid4().hex})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+
+def create_refresh_token(data: Dict[str, Any]) -> str:
+    to_encode = data.copy()
+    now = datetime.now(timezone.utc)
+    to_encode.update({"token_use": "refresh"})
+    expire = now + timedelta(minutes=REFRESH_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"iat": now, "exp": expire, "jti": uuid4().hex})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
 def decode_access_token(token: str) -> Dict[str, Any]:
     try:
-        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     except InvalidTokenError as exc:
         raise TokenDecodeError("Invalid authentication token") from exc
+
+    if payload.get("token_use") != "access":
+        raise TokenDecodeError("Invalid authentication token")
+    return payload
+
+
+def decode_refresh_token(token: str) -> Dict[str, Any]:
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except InvalidTokenError as exc:
+        raise TokenDecodeError("Invalid refresh token") from exc
+
+    if payload.get("token_use") != "refresh":
+        raise TokenDecodeError("Invalid refresh token")
+    return payload
