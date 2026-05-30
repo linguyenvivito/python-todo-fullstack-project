@@ -1,5 +1,13 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8888";
 
+class ApiError extends Error {
+  constructor(message, status) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
 async function request(path, accessToken, options = {}) {
   const headers = {};
   if (options.body) {
@@ -27,7 +35,7 @@ async function request(path, accessToken, options = {}) {
         errorMessage = text;
       }
     }
-    throw new Error(errorMessage);
+    throw new ApiError(errorMessage, response.status);
   }
 
   if (response.status === 204) {
@@ -64,3 +72,5 @@ export function deleteTask(accessToken, taskId) {
     method: "DELETE",
   });
 }
+
+export { ApiError };

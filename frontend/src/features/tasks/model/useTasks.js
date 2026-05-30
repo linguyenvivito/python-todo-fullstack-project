@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createTask, deleteTask, getTasks, getTasksByStatus, updateTask } from "../api/tasksApi";
 import { isArchivedStatus, STATUS_ORDER } from "./taskStatus";
 
-export function useTasks(accessToken) {
+export function useTasks(accessToken, withAuthenticatedRequest) {
   const isAuthenticated = Boolean(accessToken);
   const [tasks, setTasks] = useState([]);
   const [showArchivedOnly, setShowArchivedOnly] = useState(false);
@@ -17,7 +17,7 @@ export function useTasks(accessToken) {
       setLoading(true);
       setError("");
       setShowArchivedOnly(false);
-      const data = await getTasks(accessToken);
+      const data = await withAuthenticatedRequest((token) => getTasks(token));
       setTasks(data);
     } catch (err) {
       setError(err.message || "Failed to load tasks");
@@ -31,7 +31,7 @@ export function useTasks(accessToken) {
       setLoading(true);
       setError("");
       setShowArchivedOnly(true);
-      const data = await getTasksByStatus(accessToken, "archived");
+      const data = await withAuthenticatedRequest((token) => getTasksByStatus(token, "archived"));
       setTasks(data);
     } catch (err) {
       setError(err.message || "Failed to load archived tasks");
@@ -50,10 +50,12 @@ export function useTasks(accessToken) {
     try {
       setSubmitting(true);
       setError("");
-      await createTask(accessToken, {
-        title: title.trim(),
-        description: description.trim() || null,
-      });
+      await withAuthenticatedRequest((token) =>
+        createTask(token, {
+          title: title.trim(),
+          description: description.trim() || null,
+        })
+      );
       setTitle("");
       setDescription("");
       await loadTasks();
@@ -67,7 +69,7 @@ export function useTasks(accessToken) {
   async function changeTaskStatus(task, newStatus) {
     try {
       setError("");
-      await updateTask(accessToken, task.id, { status: newStatus });
+      await withAuthenticatedRequest((token) => updateTask(token, task.id, { status: newStatus }));
       if (isArchivedStatus(newStatus)) {
         await loadArchivedTasks();
       } else {
@@ -81,7 +83,7 @@ export function useTasks(accessToken) {
   async function removeTask(taskId) {
     try {
       setError("");
-      await deleteTask(accessToken, taskId);
+      await withAuthenticatedRequest((token) => deleteTask(token, taskId));
       await loadTasks();
     } catch (err) {
       setError(err.message || "Failed to delete task");

@@ -1,7 +1,7 @@
 import { STATUS_LABELS, STATUS_ORDER } from "../model/taskStatus";
 import { useTasks } from "../model/useTasks";
 
-export default function TasksPage({ authUser, accessToken, onLogout }) {
+export default function TasksPage({ authUser, accessToken, withAuthenticatedRequest, onLogout }) {
   const {
     title,
     setTitle,
@@ -16,7 +16,7 @@ export default function TasksPage({ authUser, accessToken, onLogout }) {
     createNewTask,
     changeTaskStatus,
     removeTask,
-  } = useTasks(accessToken);
+  } = useTasks(accessToken, withAuthenticatedRequest);
 
   return (
     <div className="page-shell">

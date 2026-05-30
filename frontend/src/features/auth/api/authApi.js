@@ -1,5 +1,13 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8888";
 
+class ApiError extends Error {
+  constructor(message, status) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
 async function request(path, options = {}) {
   const headers = {
     "Content-Type": "application/json",
@@ -24,7 +32,7 @@ async function request(path, options = {}) {
         errorMessage = text;
       }
     }
-    throw new Error(errorMessage);
+    throw new ApiError(errorMessage, response.status);
   }
 
   return response.json();
@@ -43,3 +51,19 @@ export function loginUser(username, password) {
     body: JSON.stringify({ username, password }),
   });
 }
+
+export function refreshUserToken(refreshToken) {
+  return request("/auth/refresh", {
+    method: "POST",
+    body: JSON.stringify({ refresh_token: refreshToken }),
+  });
+}
+
+export function revokeUserToken(refreshToken) {
+  return request("/auth/revoke", {
+    method: "POST",
+    body: JSON.stringify({ refresh_token: refreshToken }),
+  });
+}
+
+export { ApiError };

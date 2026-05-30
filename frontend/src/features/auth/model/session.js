@@ -8,7 +8,7 @@ export function getStoredSession() {
 
   try {
     const parsed = JSON.parse(rawSession);
-    if (!parsed?.username || !parsed?.accessToken) {
+    if (!parsed?.username || !parsed?.accessToken || !parsed?.refreshToken) {
       return null;
     }
     return parsed;
