@@ -6,6 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
 
 from app.core.rate_limit import limiter
 from app.middleware.cors_restriction import CorsRestrictionMiddleware
@@ -15,10 +17,16 @@ from app.slices.auth.router import router as auth_router
 from app.slices.tasks.router import router as tasks_router
 
 
+def _handle_rate_limit_exceeded(request: Request, exc: Exception) -> Response:
+    if isinstance(exc, RateLimitExceeded):
+        return _rate_limit_exceeded_handler(request, exc)
+    raise exc
+
+
 def create_app() -> FastAPI:
     app = FastAPI(title="Task Management API")
     app.state.limiter = limiter
-    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    app.add_exception_handler(RateLimitExceeded, _handle_rate_limit_exceeded)
 
     @app.get("/health")
     def health_check() -> Dict[str, str]:
