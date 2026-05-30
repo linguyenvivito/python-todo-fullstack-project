@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 
+from app.core.rate_limit import limiter, rate_limit
 from app.slices.auth.dependencies import get_auth_service
 from app.slices.auth.models import (
     LoginRequest,
@@ -20,7 +21,9 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit(rate_limit("RATE_LIMIT_AUTH_REGISTER", "30/minute"))
 def register_user(
+    request: Request,
     payload: RegisterRequest,
     auth_service: AuthService = Depends(get_auth_service),
 ) -> UserResponse:
@@ -33,7 +36,9 @@ def register_user(
 
 
 @router.post("/login", response_model=TokenResponse)
+@limiter.limit(rate_limit("RATE_LIMIT_AUTH_LOGIN", "30/minute"))
 def login(
+    request: Request,
     payload: LoginRequest,
     auth_service: AuthService = Depends(get_auth_service),
 ) -> TokenResponse:
@@ -51,7 +56,9 @@ def login(
 
 
 @router.post("/refresh", response_model=TokenResponse)
+@limiter.limit(rate_limit("RATE_LIMIT_AUTH_REFRESH", "120/minute"))
 def refresh_token(
+    request: Request,
     payload: RefreshTokenRequest,
     auth_service: AuthService = Depends(get_auth_service),
 ) -> TokenResponse:
@@ -70,7 +77,9 @@ def refresh_token(
 
 
 @router.post("/revoke", status_code=status.HTTP_204_NO_CONTENT)
+@limiter.limit(rate_limit("RATE_LIMIT_AUTH_REVOKE", "60/minute"))
 def revoke_token(
+    request: Request,
     payload: RevokeTokenRequest,
     auth_service: AuthService = Depends(get_auth_service),
 ) -> None:

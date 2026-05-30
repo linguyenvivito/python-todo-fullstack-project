@@ -98,3 +98,21 @@ def test_create_task_validation_error() -> None:
 
     response = client.post("/tasks", json={"description": "missing title"})
     assert response.status_code == 422
+
+
+def test_create_task_sanitizes_html_input() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    response = client.post(
+        "/tasks",
+        json={
+            "title": "<script>alert(1)</script>Write <b>docs</b>",
+            "description": "<img src=x onerror=alert(2)>Ship <i>release</i>",
+        },
+    )
+    assert response.status_code == 201
+
+    payload = response.json()
+    assert payload["title"] == "alert(1)Write docs"
+    assert payload["description"] == "Ship release"

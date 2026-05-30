@@ -148,3 +148,15 @@ def test_revoke_endpoint_invalidates_refresh_token() -> None:
         json={"refresh_token": refresh_token},
     )
     assert refresh_response.status_code == 401
+
+
+def test_register_sanitizes_username_html() -> None:
+    _reset_db()
+    client = TestClient(app)
+
+    response = client.post(
+        "/auth/register",
+        json={"username": "<b>Alice</b>", "password": "password123"},
+    )
+    assert response.status_code == 201
+    assert response.json()["username"] == "alice"

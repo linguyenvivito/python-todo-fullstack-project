@@ -165,6 +165,21 @@ CI runs on push and pull request:
 
 - `SQLITE_DB_PATH` (optional): path to SQLite file.
 - `DATABASE_URL` (optional): PostgreSQL connection string.
+- `CORS_ALLOW_ORIGINS` (optional): comma-separated allowlist of origins allowed for cross-origin browser calls.
+- `CORS_STRICT_ORIGIN_CHECK` (optional): when `true` (default), requests with non-allowlisted `Origin` header are rejected with 403.
+- `CSRF_ENABLED` (optional): enables CSRF middleware checks for unsafe methods (`POST`, `PUT`, `PATCH`, `DELETE`). Default `true`.
+- `CSRF_COOKIE_BASED_ONLY` (optional): when `true` (default), CSRF checks are applied only if request contains cookies.
+- `CSRF_TRUSTED_ORIGINS` (optional): comma-separated trusted origins for CSRF validation. Defaults to `CORS_ALLOW_ORIGINS`.
+- `SECURITY_HEADERS_ENABLED` (optional): enables standard security headers middleware. Default `true`.
+- `SECURITY_HSTS_ENABLED` (optional): enables `Strict-Transport-Security` header for HTTPS requests. Default `true`.
+- `RATE_LIMITING_ENABLED` (optional): enables SlowAPI rate limiting. Default `true`.
+- `RATE_LIMIT_AUTH_REGISTER` (optional): register endpoint rate, default `30/minute`.
+- `RATE_LIMIT_AUTH_LOGIN` (optional): login endpoint rate, default `30/minute`.
+- `RATE_LIMIT_AUTH_REFRESH` (optional): refresh endpoint rate, default `120/minute`.
+- `RATE_LIMIT_AUTH_REVOKE` (optional): revoke endpoint rate, default `60/minute`.
+- `RATE_LIMIT_TASKS_CREATE` (optional): create task endpoint rate, default `120/minute`.
+- `RATE_LIMIT_TASKS_UPDATE` (optional): update task endpoint rate, default `180/minute`.
+- `RATE_LIMIT_TASKS_DELETE` (optional): delete task endpoint rate, default `120/minute`.
 
 Example PostgreSQL value:
 

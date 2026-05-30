@@ -1,14 +1,26 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+from app.core.sanitization import sanitize_text
 
 
 class RegisterRequest(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
     password: str = Field(..., min_length=6, max_length=128)
 
+    @field_validator("username", mode="before")
+    @classmethod
+    def sanitize_username(cls, value: str) -> str:
+        return sanitize_text(value)
+
 
 class LoginRequest(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
     password: str = Field(..., min_length=6, max_length=128)
+
+    @field_validator("username", mode="before")
+    @classmethod
+    def sanitize_username(cls, value: str) -> str:
+        return sanitize_text(value)
 
 
 class UserResponse(BaseModel):

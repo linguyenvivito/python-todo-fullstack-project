@@ -1,9 +1,10 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
 from app.core.exceptions import InvalidTaskSearchError, TaskNotFoundByNameError, TaskNotFoundError
 from app.core.models import User
+from app.core.rate_limit import limiter, rate_limit
 from app.slices.auth.dependencies import get_request_user
 from app.slices.tasks.models import TaskCreateRequest, TaskResponse, TaskUpdateRequest
 from app.slices.tasks.repository import TaskRepository
@@ -20,7 +21,9 @@ def get_task_service() -> TaskService:
 
 
 @router.post("", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit(rate_limit("RATE_LIMIT_TASKS_CREATE", "120/minute"))
 def create_task(
+    request: Request,
     payload: TaskCreateRequest,
     service: TaskService = Depends(get_task_service),
     current_user: User = Depends(get_request_user),
@@ -94,7 +97,9 @@ def get_tasks_by_status(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
 
 @router.patch("/{task_id}", response_model=TaskResponse)
+@limiter.limit(rate_limit("RATE_LIMIT_TASKS_UPDATE", "180/minute"))
 def update_task(
+    request: Request,
     task_id: int,
     payload: TaskUpdateRequest,
     service: TaskService = Depends(get_task_service),
@@ -112,7 +117,9 @@ def update_task(
 
 
 @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
+@limiter.limit(rate_limit("RATE_LIMIT_TASKS_DELETE", "120/minute"))
 def delete_task(
+    request: Request,
     task_id: int,
     service: TaskService = Depends(get_task_service),
     current_user: User = Depends(get_request_user),
