@@ -150,6 +150,7 @@ Workflow file: `.github/workflows/ci.yml`
 
 CI runs on push and pull request:
 
+- Ruff lint on Python 3.11
 - Backend tests on Python 3.10 and 3.11
 - Frontend production build on Node 20
 

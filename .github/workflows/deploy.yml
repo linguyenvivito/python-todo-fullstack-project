@@ -42,10 +42,7 @@ jobs:
         env:
           VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
         run: |
-          BASE_PATH="${{ vars.GH_PAGES_BASE_PATH }}"
-          if [ -z "$BASE_PATH" ]; then
-            BASE_PATH="/${{ github.event.repository.name }}/"
-          fi
+          BASE_PATH="/${{ github.event.repository.name }}/"
           npm run build -- --base="$BASE_PATH"
 
       - name: Configure Pages
