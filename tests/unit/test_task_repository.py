@@ -217,11 +217,13 @@ def test_postgres_mode_requires_psycopg_row_factory(monkeypatch, method_name: st
     repository = TaskRepository()
 
     if method_name == "create":
-        call = lambda: repository.create("x")
+        def call() -> object:
+            return repository.create("x")
     elif method_name == "list_all":
         call = repository.list_all
     else:
-        call = lambda: repository.get_by_id(1)
+        def call() -> object:
+            return repository.get_by_id(1)
 
     with pytest.raises(RuntimeError, match="PostgreSQL mode requires psycopg"):
         call()

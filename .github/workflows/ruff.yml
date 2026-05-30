@@ -1,0 +1,26 @@
+name: Ruff
+
+on:
+  push:
+    branches: ["main", "master"]
+  pull_request:
+
+jobs:
+  ruff:
+    name: Ruff (Python 3.11)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Setup Ruff
+        uses: astral-sh/ruff-action@v3
+
+      - name: Run Ruff
+        run: ruff check .
