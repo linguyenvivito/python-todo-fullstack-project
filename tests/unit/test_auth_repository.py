@@ -1,7 +1,6 @@
 import pytest
 
 from app.core.models import User
-from app.slices.auth import repository as auth_repository
 from app.slices.auth.repository import (
     RefreshTokenRecord,
     RefreshTokenRepository,
