@@ -27,52 +27,93 @@ export default function LoginView({ onLogin, onRegister }) {
   }
 
   return (
-    <div className="auth-shell">
-      <section className="auth-card">
-        <p className="hero-kicker">Task Management API</p>
-        <h1>Welcome to Fluxboard</h1>
-        <p className="hero-subtitle">
-          {mode === "register"
-            ? "Create an account to start managing your tasks."
-            : "Sign in to continue to your todo workspace."}
-        </p>
-        <form onSubmit={handleSubmit} className="auth-form">
-          <label>
-            Username
-            <input
-              type="text"
-              value={loginUsername}
-              onChange={(event) => setLoginUsername(event.target.value)}
-              placeholder="project-owner"
-              autoComplete="username"
-            />
-          </label>
-          <label>
-            Password
-            <input
-              type="password"
-              value={loginPassword}
-              onChange={(event) => setLoginPassword(event.target.value)}
-              placeholder="Enter password"
-              autoComplete="current-password"
-            />
-          </label>
-          {loginError && <p className="status-banner error">{loginError}</p>}
-          <button type="submit" disabled={loginSubmitting}>
-            {loginSubmitting ? "Please wait..." : mode === "register" ? "Create Account" : "Sign In"}
-          </button>
-          <button
-            type="button"
-            className="auth-secondary"
-            onClick={() => {
-              setMode(mode === "login" ? "register" : "login");
-              setLoginError("");
-            }}
-          >
-            {mode === "login" ? "Need an account? Register" : "Already have an account? Sign in"}
-          </button>
-        </form>
-      </section>
+    <div className="relative grid min-h-screen place-items-center overflow-hidden px-4 py-10 sm:px-6">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -left-20 top-0 h-64 w-64 rounded-full bg-primary/20 blur-3xl" />
+        <div className="absolute -right-12 bottom-10 h-72 w-72 rounded-full bg-secondary/20 blur-3xl" />
+      </div>
+
+      <div className="relative z-10 w-full max-w-5xl columns-1 gap-4 lg:columns-2">
+        <section className="card mb-4 break-inside-avoid border border-base-200 bg-base-100 shadow-xl">
+          <div className="card-body p-6 sm:p-8">
+            <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+              Task Management API
+            </p>
+            <h1 className="mt-3 text-4xl font-bold leading-tight text-base-content sm:text-5xl">
+              Welcome to Fluxboard
+            </h1>
+            <p className="mt-3 max-w-lg text-sm text-base-content/70 sm:text-base">
+              {mode === "register"
+                ? "Create an account to start managing your tasks."
+                : "Sign in to continue to your todo workspace."}
+            </p>
+            <div className="mt-4">
+              <span className="badge badge-outline badge-primary badge-lg font-mono text-[11px] uppercase tracking-wide">
+                FastAPI + React + daisyUI
+              </span>
+            </div>
+          </div>
+        </section>
+
+        <section className="card mb-4 break-inside-avoid border border-base-200 bg-base-100 shadow-xl">
+          <div className="card-body p-6 sm:p-8">
+            <form onSubmit={handleSubmit} className="grid gap-4">
+              <label className="form-control w-full gap-1.5">
+                <span className="label-text font-mono text-xs font-medium uppercase tracking-wide text-base-content/70">
+                  Username
+                </span>
+                <input
+                  type="text"
+                  value={loginUsername}
+                  onChange={(event) => setLoginUsername(event.target.value)}
+                  placeholder="project-owner"
+                  autoComplete="username"
+                  className="input input-bordered w-full"
+                />
+              </label>
+
+              <label className="form-control w-full gap-1.5">
+                <span className="label-text font-mono text-xs font-medium uppercase tracking-wide text-base-content/70">
+                  Password
+                </span>
+                <input
+                  type="password"
+                  value={loginPassword}
+                  onChange={(event) => setLoginPassword(event.target.value)}
+                  placeholder="Enter password"
+                  autoComplete="current-password"
+                  className="input input-bordered w-full"
+                />
+              </label>
+
+              {loginError && (
+                <div className="alert alert-error">
+                  <span>{loginError}</span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loginSubmitting}
+                className="btn btn-primary"
+              >
+                {loginSubmitting ? "Please wait..." : mode === "register" ? "Create Account" : "Sign In"}
+              </button>
+
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={() => {
+                  setMode(mode === "login" ? "register" : "login");
+                  setLoginError("");
+                }}
+              >
+                {mode === "login" ? "Need an account? Register" : "Already have an account? Sign in"}
+              </button>
+            </form>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }
