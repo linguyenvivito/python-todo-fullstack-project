@@ -1,7 +1,7 @@
 import { STATUS_LABELS, STATUS_ORDER } from "../model/taskStatus";
 import { useTasks } from "../model/useTasks";
 
-export default function TasksPage({ authUser, accessToken, withAuthenticatedRequest, onLogout }) {
+export default function TasksPage({ authUser, accessToken, withAuthenticatedRequest, onShowAudit, onLogout }) {
   const {
     title,
     setTitle,
@@ -29,7 +29,10 @@ export default function TasksPage({ authUser, accessToken, withAuthenticatedRequ
         </p>
         <div className="hero-meta">
           <span>Signed in as {authUser}</span>
-          <button type="button" onClick={onLogout}>Logout</button>
+          <div className="hero-actions">
+            <button type="button" onClick={onShowAudit}>Audit Logs</button>
+            <button type="button" onClick={onLogout}>Logout</button>
+          </div>
         </div>
       </header>
 

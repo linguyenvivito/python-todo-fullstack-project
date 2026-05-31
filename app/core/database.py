@@ -70,6 +70,23 @@ def init_database() -> None:
                         replaced_by_jti TEXT NULL
                     );
 
+                    CREATE TABLE IF NOT EXISTS audit_logs (
+                        id BIGSERIAL PRIMARY KEY,
+                        occurred_at BIGINT NOT NULL,
+                        actor_user_id BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,
+                        action TEXT NOT NULL,
+                        resource_type TEXT NULL,
+                        resource_id TEXT NULL,
+                        success BOOLEAN NOT NULL,
+                        http_method TEXT NULL,
+                        path TEXT NULL,
+                        status_code INTEGER NULL,
+                        client_ip TEXT NULL,
+                        user_agent TEXT NULL,
+                        request_id TEXT NULL,
+                        details_json TEXT NULL
+                    );
+
                     ALTER TABLE tasks
                     ADD COLUMN IF NOT EXISTS user_id BIGINT NULL REFERENCES users(id) ON DELETE CASCADE;
 
@@ -78,6 +95,15 @@ def init_database() -> None:
 
                     CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id
                     ON refresh_tokens(user_id);
+
+                    CREATE INDEX IF NOT EXISTS idx_audit_logs_occurred_at
+                    ON audit_logs(occurred_at);
+
+                    CREATE INDEX IF NOT EXISTS idx_audit_logs_actor_user_id
+                    ON audit_logs(actor_user_id);
+
+                    CREATE INDEX IF NOT EXISTS idx_audit_logs_action
+                    ON audit_logs(action);
                     """
                 )
             finally:
@@ -110,6 +136,24 @@ def init_database() -> None:
                         replaced_by_jti TEXT NULL,
                         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                     );
+
+                    CREATE TABLE IF NOT EXISTS audit_logs (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        occurred_at INTEGER NOT NULL,
+                        actor_user_id INTEGER NULL,
+                        action TEXT NOT NULL,
+                        resource_type TEXT NULL,
+                        resource_id TEXT NULL,
+                        success INTEGER NOT NULL,
+                        http_method TEXT NULL,
+                        path TEXT NULL,
+                        status_code INTEGER NULL,
+                        client_ip TEXT NULL,
+                        user_agent TEXT NULL,
+                        request_id TEXT NULL,
+                        details_json TEXT NULL,
+                        FOREIGN KEY (actor_user_id) REFERENCES users(id) ON DELETE SET NULL
+                    );
                     """
                 )
                 pragma_result = sqlite_connection.execute("PRAGMA table_info(tasks)")
@@ -131,6 +175,24 @@ def init_database() -> None:
                     """
                     CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id
                     ON refresh_tokens(user_id)
+                    """
+                )
+                sqlite_connection.execute(
+                    """
+                    CREATE INDEX IF NOT EXISTS idx_audit_logs_occurred_at
+                    ON audit_logs(occurred_at)
+                    """
+                )
+                sqlite_connection.execute(
+                    """
+                    CREATE INDEX IF NOT EXISTS idx_audit_logs_actor_user_id
+                    ON audit_logs(actor_user_id)
+                    """
+                )
+                sqlite_connection.execute(
+                    """
+                    CREATE INDEX IF NOT EXISTS idx_audit_logs_action
+                    ON audit_logs(action)
                     """
                 )
             else:
@@ -158,8 +220,47 @@ def init_database() -> None:
                 )
                 sqlite_connection.execute(
                     """
+                    CREATE TABLE IF NOT EXISTS audit_logs (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        occurred_at INTEGER NOT NULL,
+                        actor_user_id INTEGER NULL,
+                        action TEXT NOT NULL,
+                        resource_type TEXT NULL,
+                        resource_id TEXT NULL,
+                        success INTEGER NOT NULL,
+                        http_method TEXT NULL,
+                        path TEXT NULL,
+                        status_code INTEGER NULL,
+                        client_ip TEXT NULL,
+                        user_agent TEXT NULL,
+                        request_id TEXT NULL,
+                        details_json TEXT NULL,
+                        FOREIGN KEY (actor_user_id) REFERENCES users(id) ON DELETE SET NULL
+                    )
+                    """
+                )
+                sqlite_connection.execute(
+                    """
                     CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id
                     ON refresh_tokens(user_id)
+                    """
+                )
+                sqlite_connection.execute(
+                    """
+                    CREATE INDEX IF NOT EXISTS idx_audit_logs_occurred_at
+                    ON audit_logs(occurred_at)
+                    """
+                )
+                sqlite_connection.execute(
+                    """
+                    CREATE INDEX IF NOT EXISTS idx_audit_logs_actor_user_id
+                    ON audit_logs(actor_user_id)
+                    """
+                )
+                sqlite_connection.execute(
+                    """
+                    CREATE INDEX IF NOT EXISTS idx_audit_logs_action
+                    ON audit_logs(action)
                     """
                 )
         connection.commit()

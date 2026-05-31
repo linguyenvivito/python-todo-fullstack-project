@@ -2,6 +2,7 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
+from app.core.audit import audit_service
 from app.core.rate_limit import limiter, rate_limit
 from app.slices.auth.dependencies import get_auth_service
 from app.slices.auth.models import (
@@ -33,9 +34,25 @@ def register_user(
     try:
         user = auth_service.register_user(payload.username, payload.password)
     except UserAlreadyExistsError as exc:
+        audit_service.record_event(
+            action="auth.register",
+            success=False,
+            request=request,
+            status_code=status.HTTP_409_CONFLICT,
+            details={"reason": "user_already_exists", "username": payload.username},
+        )
         logger.warning("register conflict username=%s", payload.username)
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc))
 
+    audit_service.record_event(
+        action="auth.register",
+        success=True,
+        request=request,
+        actor_user_id=user.id,
+        resource_type="user",
+        resource_id=str(user.id),
+        status_code=status.HTTP_201_CREATED,
+    )
     logger.info("register success user_id=%s username=%s", user.id, user.username)
     return UserResponse(id=user.id, username=user.username)
 
@@ -50,10 +67,26 @@ def login(
     try:
         user = auth_service.authenticate(payload.username, payload.password)
     except InvalidCredentialsError as exc:
+        audit_service.record_event(
+            action="auth.login",
+            success=False,
+            request=request,
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            details={"reason": "invalid_credentials", "username": payload.username},
+        )
         logger.warning("login failed username=%s", payload.username)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc))
 
     access_token, refresh_token = auth_service.create_token_pair_for_user(user)
+    audit_service.record_event(
+        action="auth.login",
+        success=True,
+        request=request,
+        actor_user_id=user.id,
+        resource_type="user",
+        resource_id=str(user.id),
+        status_code=status.HTTP_200_OK,
+    )
     logger.info("login success user_id=%s username=%s", user.id, user.username)
     return TokenResponse(
         access_token=access_token,
@@ -74,9 +107,25 @@ def refresh_token(
             payload.refresh_token
         )
     except InvalidRefreshTokenError as exc:
+        audit_service.record_event(
+            action="auth.refresh",
+            success=False,
+            request=request,
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            details={"reason": "invalid_refresh_token"},
+        )
         logger.warning("refresh failed")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc))
 
+    audit_service.record_event(
+        action="auth.refresh",
+        success=True,
+        request=request,
+        actor_user_id=user.id,
+        resource_type="user",
+        resource_id=str(user.id),
+        status_code=status.HTTP_200_OK,
+    )
     logger.info("refresh success user_id=%s username=%s", user.id, user.username)
     return TokenResponse(
         access_token=access_token,
@@ -95,7 +144,20 @@ def revoke_token(
     try:
         auth_service.revoke_refresh_token(payload.refresh_token)
     except InvalidRefreshTokenError as exc:
+        audit_service.record_event(
+            action="auth.revoke",
+            success=False,
+            request=request,
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            details={"reason": "invalid_refresh_token"},
+        )
         logger.warning("revoke failed")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc))
 
+    audit_service.record_event(
+        action="auth.revoke",
+        success=True,
+        request=request,
+        status_code=status.HTTP_204_NO_CONTENT,
+    )
     logger.info("revoke success")

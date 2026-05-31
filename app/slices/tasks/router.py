@@ -3,6 +3,7 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
+from app.core.audit import audit_service
 from app.core.exceptions import InvalidTaskSearchError, TaskNotFoundByNameError, TaskNotFoundError
 from app.core.models import User
 from app.core.rate_limit import limiter, rate_limit
@@ -34,6 +35,15 @@ def create_task(
         service.create_task(payload, user_id=current_user.id)
         if current_user.id
         else service.create_task(payload)
+    )
+    audit_service.record_event(
+        action="task.create",
+        success=True,
+        request=request,
+        actor_user_id=current_user.id or None,
+        resource_type="task",
+        resource_id=str(task.id),
+        status_code=status.HTTP_201_CREATED,
     )
     logger.info("create task success task_id=%s user_id=%s", task.id, current_user.id or 0)
     return TaskResponse.model_validate(task, from_attributes=True)
@@ -127,9 +137,29 @@ def update_task(
             if current_user.id
             else service.update_task(task_id, payload)
         )
+        audit_service.record_event(
+            action="task.update",
+            success=True,
+            request=request,
+            actor_user_id=current_user.id or None,
+            resource_type="task",
+            resource_id=str(task_id),
+            status_code=status.HTTP_200_OK,
+            details={"has_title": payload.title is not None, "has_description": payload.description is not None, "has_status": payload.status is not None},
+        )
         logger.info("update task success task_id=%s user_id=%s", task_id, current_user.id or 0)
         return TaskResponse.model_validate(task, from_attributes=True)
     except TaskNotFoundError as exc:
+        audit_service.record_event(
+            action="task.update",
+            success=False,
+            request=request,
+            actor_user_id=current_user.id or None,
+            resource_type="task",
+            resource_id=str(task_id),
+            status_code=status.HTTP_404_NOT_FOUND,
+            details={"reason": "task_not_found"},
+        )
         logger.warning("update task not found task_id=%s user_id=%s", task_id, current_user.id or 0)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
 
@@ -147,8 +177,27 @@ def delete_task(
             service.delete_task(task_id, user_id=current_user.id)
         else:
             service.delete_task(task_id)
+        audit_service.record_event(
+            action="task.delete",
+            success=True,
+            request=request,
+            actor_user_id=current_user.id or None,
+            resource_type="task",
+            resource_id=str(task_id),
+            status_code=status.HTTP_204_NO_CONTENT,
+        )
         logger.info("delete task success task_id=%s user_id=%s", task_id, current_user.id or 0)
         return Response(status_code=status.HTTP_204_NO_CONTENT)
     except TaskNotFoundError as exc:
+        audit_service.record_event(
+            action="task.delete",
+            success=False,
+            request=request,
+            actor_user_id=current_user.id or None,
+            resource_type="task",
+            resource_id=str(task_id),
+            status_code=status.HTTP_404_NOT_FOUND,
+            details={"reason": "task_not_found"},
+        )
         logger.warning("delete task not found task_id=%s user_id=%s", task_id, current_user.id or 0)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))

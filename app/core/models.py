@@ -24,3 +24,21 @@ class User:
     id: int
     username: str
     password_hash: str
+
+
+@dataclass
+class AuditLog:
+    id: int
+    occurred_at: int
+    actor_user_id: Optional[int]
+    action: str
+    resource_type: Optional[str]
+    resource_id: Optional[str]
+    success: bool
+    http_method: Optional[str]
+    path: Optional[str]
+    status_code: Optional[int]
+    client_ip: Optional[str]
+    user_agent: Optional[str]
+    request_id: Optional[str]
+    details_json: Optional[str]
