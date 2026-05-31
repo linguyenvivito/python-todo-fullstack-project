@@ -7,7 +7,14 @@ function formatTime(epochSeconds) {
   return new Date(epochSeconds * 1000).toLocaleString();
 }
 
-export default function AuditLogsPage({ authUser, accessToken, withAuthenticatedRequest, onShowTasks, onLogout }) {
+export default function AuditLogsPage({
+  authUser,
+  accessToken,
+  withAuthenticatedRequest,
+  onShowTasks,
+  onShowEmail,
+  onLogout,
+}) {
   const {
     items,
     total,
@@ -58,6 +65,13 @@ export default function AuditLogsPage({ authUser, accessToken, withAuthenticated
                 className="btn btn-sm btn-outline"
               >
                 Tasks
+              </button>
+              <button
+                type="button"
+                onClick={onShowEmail}
+                className="btn btn-sm btn-outline"
+              >
+                Email
               </button>
               <button
                 type="button"

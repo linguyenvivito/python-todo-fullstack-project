@@ -8,7 +8,14 @@ const statusCardClasses = {
   archived: "border-error/40 bg-error/10",
 };
 
-export default function TasksPage({ authUser, accessToken, withAuthenticatedRequest, onShowAudit, onLogout }) {
+export default function TasksPage({
+  authUser,
+  accessToken,
+  withAuthenticatedRequest,
+  onShowAudit,
+  onShowEmail,
+  onLogout,
+}) {
   const {
     title,
     setTitle,
@@ -50,6 +57,13 @@ export default function TasksPage({ authUser, accessToken, withAuthenticatedRequ
               className="btn btn-sm btn-outline"
             >
               Audit Logs
+            </button>
+            <button
+              type="button"
+              onClick={onShowEmail}
+              className="btn btn-sm btn-outline"
+            >
+              Email
             </button>
             <button
               type="button"

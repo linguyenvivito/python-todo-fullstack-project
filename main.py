@@ -18,6 +18,7 @@ from app.middleware.request_logging import RequestLoggingMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
 from app.slices.auth.router import router as auth_router
 from app.slices.audit.router import router as audit_router
+from app.slices.email.router import router as email_router
 from app.slices.tasks.router import router as tasks_router
 
 logger = logging.getLogger("app.security.rate_limit")
@@ -104,6 +105,7 @@ def create_app() -> FastAPI:
     app.add_middleware(SlowAPIMiddleware)
     app.include_router(auth_router)
     app.include_router(audit_router)
+    app.include_router(email_router)
     app.include_router(tasks_router)
     return app
 

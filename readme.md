@@ -77,6 +77,8 @@ Base URL: `http://127.0.0.1:8888`
 - `GET /tasks/name/{task_name}` get task by name
 - `PATCH /tasks/{task_id}` update task
 - `DELETE /tasks/{task_id}` delete task
+- `GET /email/templates` list supported email templates (requires authentication)
+- `POST /email/send` send an email via SMTP (requires authentication)
 
 Task status values:
 
@@ -91,6 +93,30 @@ Example create payload:
 {
 	"title": "Write tests",
 	"description": "Add API coverage"
+}
+```
+
+Example send email payload (manual mode):
+
+```json
+{
+	"to_email": "user@example.com",
+	"subject": "Welcome",
+	"body": "Thanks for joining."
+}
+```
+
+Example send email payload (template mode):
+
+```json
+{
+	"to_email": "user@example.com",
+	"template_name": "password_reset",
+	"template_data": {
+		"username": "alice",
+		"reset_link": "https://app.example.com/reset?token=abc123",
+		"expiry_minutes": "30"
+	}
 }
 ```
 
@@ -185,6 +211,18 @@ CI runs on push and pull request:
 - `RATE_LIMIT_TASKS_CREATE` (optional): create task endpoint rate, default `120/minute`.
 - `RATE_LIMIT_TASKS_UPDATE` (optional): update task endpoint rate, default `180/minute`.
 - `RATE_LIMIT_TASKS_DELETE` (optional): delete task endpoint rate, default `120/minute`.
+- `RATE_LIMIT_EMAIL_SEND` (optional): email send endpoint rate, default `20/minute`.
+- `SMTP_HOST` (required for email): SMTP server host.
+- `SMTP_PORT` (optional): SMTP server port, default `587`.
+- `SMTP_USE_TLS` (optional): enable STARTTLS for plain SMTP connections, default `true`.
+- `SMTP_USE_SSL` (optional): use SMTP over SSL, default `false`.
+- `SMTP_USERNAME` (optional): SMTP username for authenticated sending.
+- `SMTP_PASSWORD` (optional): SMTP password for authenticated sending.
+- `SMTP_FROM_EMAIL` (optional): from-address for outbound email; falls back to `SMTP_USERNAME`.
+- `SMTP_FROM_NAME` (optional): display sender name, default `Task Management API`.
+- `SMTP_TIMEOUT` (optional): SMTP connect timeout in seconds, default `10`.
+- `SMTP_MAX_RETRIES` (optional): retry count after first failed send attempt, default `2`.
+- `SMTP_RETRY_BACKOFF_SECONDS` (optional): base exponential backoff in seconds, default `0.5`.
 
 Example PostgreSQL value:
 
