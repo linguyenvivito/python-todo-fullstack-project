@@ -2,7 +2,7 @@
 
 A simple task management project built with:
 
-- Backend: FastAPI + SQLite
+- Backend: FastAPI + PostgreSQL
 - Frontend: React + Vite
 - Tests: pytest
 - CI: GitHub Actions
@@ -182,15 +182,13 @@ CI runs on push and pull request:
 
 ## Notes
 
-- Default database is SQLite (`tasks.db` in project root).
-- Set `SQLITE_DB_PATH` to override the SQLite file path.
-- To use PostgreSQL instead, set `DATABASE_URL`.
+- This project runs on PostgreSQL.
+- Set `DATABASE_URL` to your PostgreSQL connection string.
 
 
 
 # Environment Variables
 
-- `SQLITE_DB_PATH` (optional): path to SQLite file.
 - `DATABASE_URL` (optional): PostgreSQL connection string.
 - `CORS_ALLOW_ORIGINS` (optional): comma-separated allowlist of origins allowed for cross-origin browser calls.
 - `CORS_STRICT_ORIGIN_CHECK` (optional): when `true` (default), requests with non-allowlisted `Origin` header are rejected with 403.

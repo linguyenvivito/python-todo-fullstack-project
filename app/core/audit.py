@@ -1,5 +1,6 @@
 import json
 import time
+from functools import lru_cache
 from typing import Any, Mapping, Optional, cast
 
 from starlette.requests import Request
@@ -9,7 +10,7 @@ try:
 except ImportError:  # pragma: no cover
     dict_row = None
 
-from app.core.database import get_connection, init_database, use_postgres
+from app.core.database import get_connection, init_database
 from app.core.models import AuditLog
 
 
@@ -54,68 +55,13 @@ class AuditRepository:
         details_json: Optional[str],
     ) -> AuditLog:
         with get_connection() as connection:
-            if use_postgres():
-                if dict_row is None:
-                    raise RuntimeError("PostgreSQL mode requires psycopg to be installed.")
+            if dict_row is None:
+                raise RuntimeError("PostgreSQL mode requires psycopg to be installed.")
 
-                pg_connection = cast(Any, connection)
-                cursor = pg_connection.cursor(row_factory=dict_row)
-                try:
-                    cursor.execute(
-                        """
-                        INSERT INTO audit_logs (
-                            occurred_at,
-                            actor_user_id,
-                            action,
-                            resource_type,
-                            resource_id,
-                            success,
-                            http_method,
-                            path,
-                            status_code,
-                            client_ip,
-                            user_agent,
-                            request_id,
-                            details_json
-                        )
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                        RETURNING
-                            id,
-                            occurred_at,
-                            actor_user_id,
-                            action,
-                            resource_type,
-                            resource_id,
-                            success,
-                            http_method,
-                            path,
-                            status_code,
-                            client_ip,
-                            user_agent,
-                            request_id,
-                            details_json
-                        """,
-                        (
-                            occurred_at,
-                            actor_user_id,
-                            action,
-                            resource_type,
-                            resource_id,
-                            success,
-                            http_method,
-                            path,
-                            status_code,
-                            client_ip,
-                            user_agent,
-                            request_id,
-                            details_json,
-                        ),
-                    )
-                    row = cursor.fetchone()
-                finally:
-                    cursor.close()
-            else:
-                cursor = connection.execute(
+            pg_connection = cast(Any, connection)
+            cursor = pg_connection.cursor(row_factory=dict_row)
+            try:
+                cursor.execute(
                     """
                     INSERT INTO audit_logs (
                         occurred_at,
@@ -132,28 +78,8 @@ class AuditRepository:
                         request_id,
                         details_json
                     )
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """,
-                    (
-                        occurred_at,
-                        actor_user_id,
-                        action,
-                        resource_type,
-                        resource_id,
-                        int(success),
-                        http_method,
-                        path,
-                        status_code,
-                        client_ip,
-                        user_agent,
-                        request_id,
-                        details_json,
-                    ),
-                )
-                log_id = int(cast(Any, cursor).lastrowid or 0)
-                row = connection.execute(
-                    """
-                    SELECT
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    RETURNING
                         id,
                         occurred_at,
                         actor_user_id,
@@ -168,11 +94,26 @@ class AuditRepository:
                         user_agent,
                         request_id,
                         details_json
-                    FROM audit_logs
-                    WHERE id = ?
                     """,
-                    (log_id,),
-                ).fetchone()
+                    (
+                        occurred_at,
+                        actor_user_id,
+                        action,
+                        resource_type,
+                        resource_id,
+                        success,
+                        http_method,
+                        path,
+                        status_code,
+                        client_ip,
+                        user_agent,
+                        request_id,
+                        details_json,
+                    ),
+                )
+                row = cursor.fetchone()
+            finally:
+                cursor.close()
             connection.commit()
 
         if row is None:
@@ -224,87 +165,48 @@ class AuditRepository:
         offset: int,
     ) -> list[AuditLog]:
         with get_connection() as connection:
-            if use_postgres():
-                if dict_row is None:
-                    raise RuntimeError("PostgreSQL mode requires psycopg to be installed.")
+            if dict_row is None:
+                raise RuntimeError("PostgreSQL mode requires psycopg to be installed.")
 
-                where_clause, params = self._build_filters(
-                    action=action,
-                    success=success,
-                    actor_user_id=actor_user_id,
-                    occurred_from=occurred_from,
-                    occurred_to=occurred_to,
-                    placeholder="%s",
-                )
-                query = f"""
-                    SELECT
-                        id,
-                        occurred_at,
-                        actor_user_id,
-                        action,
-                        resource_type,
-                        resource_id,
-                        success,
-                        http_method,
-                        path,
-                        status_code,
-                        client_ip,
-                        user_agent,
-                        request_id,
-                        details_json
-                    FROM audit_logs
-                    {where_clause}
-                    ORDER BY id DESC
-                    LIMIT %s
-                    OFFSET %s
-                """
-                typed_query = cast(Any, query)
+            where_clause, params = self._build_filters(
+                action=action,
+                success=success,
+                actor_user_id=actor_user_id,
+                occurred_from=occurred_from,
+                occurred_to=occurred_to,
+                placeholder="%s",
+            )
+            query = f"""
+                SELECT
+                    id,
+                    occurred_at,
+                    actor_user_id,
+                    action,
+                    resource_type,
+                    resource_id,
+                    success,
+                    http_method,
+                    path,
+                    status_code,
+                    client_ip,
+                    user_agent,
+                    request_id,
+                    details_json
+                FROM audit_logs
+                {where_clause}
+                ORDER BY id DESC
+                LIMIT %s
+                OFFSET %s
+            """
+            typed_query = cast(Any, query)
 
-                pg_connection = cast(Any, connection)
-                cursor = pg_connection.cursor(row_factory=dict_row)
-                try:
-                    cursor.execute(typed_query, (*params, limit, offset))
-                    rows = cursor.fetchall()
-                finally:
-                    cursor.close()
-            else:
-                where_clause, params = self._build_filters(
-                    action=action,
-                    success=success,
-                    actor_user_id=actor_user_id,
-                    occurred_from=occurred_from,
-                    occurred_to=occurred_to,
-                    placeholder="?",
-                )
-                sqlite_query = cast(
-                    Any,
-                    f"""
-                    SELECT
-                        id,
-                        occurred_at,
-                        actor_user_id,
-                        action,
-                        resource_type,
-                        resource_id,
-                        success,
-                        http_method,
-                        path,
-                        status_code,
-                        client_ip,
-                        user_agent,
-                        request_id,
-                        details_json
-                    FROM audit_logs
-                    {where_clause}
-                    ORDER BY id DESC
-                    LIMIT ?
-                    OFFSET ?
-                    """,
-                )
-                rows = connection.execute(
-                    sqlite_query,
-                    (*params, limit, offset),
-                ).fetchall()
+            pg_connection = cast(Any, connection)
+            cursor = pg_connection.cursor(row_factory=dict_row)
+            try:
+                cursor.execute(typed_query, (*params, limit, offset))
+                rows = cursor.fetchall()
+            finally:
+                cursor.close()
 
         return [self._row_to_audit_log(row) for row in rows]
 
@@ -318,54 +220,29 @@ class AuditRepository:
         occurred_to: Optional[int],
     ) -> int:
         with get_connection() as connection:
-            if use_postgres():
-                if dict_row is None:
-                    raise RuntimeError("PostgreSQL mode requires psycopg to be installed.")
-
-                where_clause, params = self._build_filters(
-                    action=action,
-                    success=success,
-                    actor_user_id=actor_user_id,
-                    occurred_from=occurred_from,
-                    occurred_to=occurred_to,
-                    placeholder="%s",
-                )
-                count_query = cast(
-                    Any,
-                    f"""
-                    SELECT COUNT(*)
-                    FROM audit_logs
-                    {where_clause}
-                    """,
-                )
-                pg_connection = cast(Any, connection)
-                cursor = pg_connection.cursor()
-                try:
-                    cursor.execute(count_query, tuple(params))
-                    row = cursor.fetchone()
-                finally:
-                    cursor.close()
-            else:
-                where_clause, params = self._build_filters(
-                    action=action,
-                    success=success,
-                    actor_user_id=actor_user_id,
-                    occurred_from=occurred_from,
-                    occurred_to=occurred_to,
-                    placeholder="?",
-                )
-                sqlite_count_query = cast(
-                    Any,
-                    f"""
-                    SELECT COUNT(*)
-                    FROM audit_logs
-                    {where_clause}
-                    """,
-                )
-                row = connection.execute(
-                    sqlite_count_query,
-                    tuple(params),
-                ).fetchone()
+            where_clause, params = self._build_filters(
+                action=action,
+                success=success,
+                actor_user_id=actor_user_id,
+                occurred_from=occurred_from,
+                occurred_to=occurred_to,
+                placeholder="%s",
+            )
+            count_query = cast(
+                Any,
+                f"""
+                SELECT COUNT(*)
+                FROM audit_logs
+                {where_clause}
+                """,
+            )
+            pg_connection = cast(Any, connection)
+            cursor = pg_connection.cursor()
+            try:
+                cursor.execute(count_query, tuple(params))
+                row = cursor.fetchone()
+            finally:
+                cursor.close()
 
         return int(row[0] if row else 0)
 
@@ -484,4 +361,17 @@ class AuditService:
         return items, total
 
 
-audit_service = AuditService(AuditRepository())
+@lru_cache(maxsize=1)
+def _get_audit_service() -> AuditService:
+    return AuditService(AuditRepository())
+
+
+class _LazyAuditService:
+    def record_event(self, *args, **kwargs):
+        return _get_audit_service().record_event(*args, **kwargs)
+
+    def list_events(self, *args, **kwargs):
+        return _get_audit_service().list_events(*args, **kwargs)
+
+
+audit_service = _LazyAuditService()

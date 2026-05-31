@@ -1,3 +1,5 @@
+from functools import lru_cache
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
@@ -7,13 +9,13 @@ from app.slices.auth.repository import RefreshTokenRepository, UserRepository
 from app.slices.auth.service import AuthService
 
 _bearer = HTTPBearer(auto_error=False)
-_repository = UserRepository()
-_refresh_token_repository = RefreshTokenRepository()
-_service = AuthService(_repository, _refresh_token_repository)
 
 
+@lru_cache(maxsize=1)
 def get_auth_service() -> AuthService:
-    return _service
+    repository = UserRepository()
+    refresh_token_repository = RefreshTokenRepository()
+    return AuthService(repository, refresh_token_repository)
 
 
 def get_current_user(

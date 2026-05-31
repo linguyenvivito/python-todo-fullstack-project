@@ -1,21 +1,17 @@
 import os
-from pathlib import Path
 from uuid import uuid4
 
 from fastapi.testclient import TestClient
+import pytest
 
 from app.core.database import init_database
 from main import create_app
 
-
-TEST_DB = Path(__file__).with_name("test_tasks.db")
-os.environ.pop("DATABASE_URL", None)
-os.environ["SQLITE_DB_PATH"] = str(TEST_DB)
+if not os.getenv("DATABASE_URL", "").strip():
+    pytest.skip("DATABASE_URL is required for integration tests", allow_module_level=True)
 
 
 def _reset_db() -> None:
-    if TEST_DB.exists():
-        TEST_DB.unlink()
     init_database()
 
 

@@ -1,12 +1,13 @@
+import importlib
+from contextlib import contextmanager
 from typing import Optional, Union
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.core.exceptions import InvalidTaskSearchError, TaskNotFoundByNameError, TaskNotFoundError
-from app.core.models import Task, TaskStatus
+from app.core.models import Task, TaskStatus, User
 from app.slices.tasks.models import TaskCreateRequest, TaskUpdateRequest
-from app.slices.tasks import router as tasks_router_module
-from main import app
 
 
 class FakeTaskService:
@@ -56,99 +57,128 @@ class FakeTaskService:
         self.deleted_task_id = task_id
 
 
-def _client_with_service(fake_service: FakeTaskService) -> TestClient:
-    app.dependency_overrides[tasks_router_module.get_task_service] = lambda: fake_service
-    return TestClient(app)
-
-
-def _clear_overrides() -> None:
-    app.dependency_overrides.clear()
-
-
-def test_router_create_task_uses_service_payload() -> None:
+@pytest.fixture
+def client_and_service(mocker):
     fake_service = FakeTaskService()
-    client = _client_with_service(fake_service)
+
+    class _NoopCursor:
+        description = [("id",), ("occurred_at",), ("actor_user_id",), ("action",)]
+
+        def execute(self, _query, _params=None):
+            return None
+
+        def fetchone(self):
+            return None
+
+        def fetchall(self):
+            return []
+
+        def close(self) -> None:
+            return None
+
+    class _NoopConnection:
+        def cursor(self, row_factory=None):
+            del row_factory
+            return _NoopCursor()
+
+        def commit(self) -> None:
+            return None
+
+        def close(self) -> None:
+            return None
+
+    @contextmanager
+    def _fake_get_connection():
+        yield _NoopConnection()
+
+    # Prevent router/auth/audit import-time DB calls from requiring real PostgreSQL.
+    mocker.patch("app.core.database.get_connection", _fake_get_connection)
+
+    import app.slices.tasks.router as tasks_router_module
+    import main as main_module
+    from app.slices.auth.dependencies import get_request_user
+
+    importlib.reload(tasks_router_module)
+    importlib.reload(main_module)
+
+    app = main_module.create_app()
+    app.dependency_overrides[tasks_router_module.get_task_service] = lambda: fake_service
+    app.dependency_overrides[get_request_user] = lambda: User(id=0, username="", password_hash="")
+
+    mocker.patch.object(tasks_router_module.audit_service, "record_event", return_value=None)
+
+    client = TestClient(app)
+    return client, fake_service
+
+
+def test_router_create_task_uses_service_payload(client_and_service) -> None:
+    client, fake_service = client_and_service
 
     response = client.post("/tasks", json={"title": "Created", "description": "Desc"})
 
-    _clear_overrides()
     assert response.status_code == 201
     assert response.json()["title"] == "Created"
     assert fake_service.create_payload is not None
     assert fake_service.create_payload.title == "Created"
 
 
-def test_router_maps_not_found_to_404_for_get_by_id() -> None:
-    fake_service = FakeTaskService()
+def test_router_maps_not_found_to_404_for_get_by_id(client_and_service) -> None:
+    client, fake_service = client_and_service
     fake_service.get_result = None
-    client = _client_with_service(fake_service)
 
     response = client.get("/tasks/123")
 
-    _clear_overrides()
     assert response.status_code == 404
 
 
-def test_router_get_by_name_returns_task() -> None:
-    fake_service = FakeTaskService()
-    client = _client_with_service(fake_service)
+def test_router_get_by_name_returns_task(client_and_service) -> None:
+    client, _ = client_and_service
 
     response = client.get("/tasks/name/Cre")
 
-    _clear_overrides()
     assert response.status_code == 200
     assert response.json()["id"] == 1
 
 
-def test_router_get_by_name_maps_not_found_to_404() -> None:
-    fake_service = FakeTaskService()
+def test_router_get_by_name_maps_not_found_to_404(client_and_service) -> None:
+    client, fake_service = client_and_service
     fake_service.get_by_name_result = None
-    client = _client_with_service(fake_service)
 
     response = client.get("/tasks/name/Unknown")
 
-    _clear_overrides()
     assert response.status_code == 404
 
 
-def test_router_get_by_name_maps_invalid_search_to_400() -> None:
-    fake_service = FakeTaskService()
-    client = _client_with_service(fake_service)
+def test_router_get_by_name_maps_invalid_search_to_400(client_and_service) -> None:
+    client, _ = client_and_service
 
     response = client.get("/tasks/name/invalid")
 
-    _clear_overrides()
     assert response.status_code == 400
 
 
-def test_router_update_404_when_service_raises_not_found() -> None:
-    fake_service = FakeTaskService()
+def test_router_update_404_when_service_raises_not_found(client_and_service) -> None:
+    client, fake_service = client_and_service
     fake_service.update_result = None
-    client = _client_with_service(fake_service)
 
     response = client.patch("/tasks/99", json={"status": "done"})
 
-    _clear_overrides()
     assert response.status_code == 404
 
 
-def test_router_delete_returns_204() -> None:
-    fake_service = FakeTaskService()
-    client = _client_with_service(fake_service)
+def test_router_delete_returns_204(client_and_service) -> None:
+    client, fake_service = client_and_service
 
     response = client.delete("/tasks/1")
 
-    _clear_overrides()
     assert response.status_code == 204
     assert fake_service.deleted_task_id == 1
 
 
-def test_router_delete_404_when_service_raises() -> None:
-    fake_service = FakeTaskService()
+def test_router_delete_404_when_service_raises(client_and_service) -> None:
+    client, fake_service = client_and_service
     fake_service.deleted_task_id = "RAISE"
-    client = _client_with_service(fake_service)
 
     response = client.delete("/tasks/1")
 
-    _clear_overrides()
     assert response.status_code == 404

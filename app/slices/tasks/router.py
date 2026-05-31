@@ -1,4 +1,5 @@
 import logging
+from functools import lru_cache
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
@@ -15,12 +16,10 @@ from app.slices.tasks.service import TaskService
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 logger = logging.getLogger("app.api.tasks")
 
-_repository = TaskRepository()
-_service = TaskService(_repository)
-
-
+@lru_cache(maxsize=1)
 def get_task_service() -> TaskService:
-    return _service
+    repository = TaskRepository()
+    return TaskService(repository)
 
 
 @router.post("", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)

@@ -1,8 +1,8 @@
 import argparse
 import os
-from typing import Any, List, Sequence, Tuple, cast
+from typing import List, Sequence, Tuple
 
-from app.core.database import get_connection, init_database, use_postgres
+from app.core.database import get_connection, init_database
 from app.core.security import hash_password
 
 DEFAULT_TASKS: List[Tuple[str, str]] = [
@@ -16,47 +16,28 @@ DEFAULT_TASKS: List[Tuple[str, str]] = [
 
 def ensure_demo_user(username: str, password: str) -> int:
     with get_connection() as connection:
-        if use_postgres():
-            cursor = connection.cursor()
-            try:
-                cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
-                row = cursor.fetchone()
-                if row:
-                    connection.commit()
-                    return int(row[0])
-
-                cursor.execute(
-                    """
-                    INSERT INTO users (username, password_hash)
-                    VALUES (%s, %s)
-                    RETURNING id
-                    """,
-                    (username, hash_password(password)),
-                )
-                created_row = cursor.fetchone()
-                if created_row is None:
-                    raise RuntimeError("Failed to create demo user")
-                user_id = int(created_row[0])
-            finally:
-                cursor.close()
-        else:
-            sqlite_connection = connection
-            row = sqlite_connection.execute(
-                "SELECT id FROM users WHERE username = ?",
-                (username,),
-            ).fetchone()
+        cursor = connection.cursor()
+        try:
+            cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
+            row = cursor.fetchone()
             if row:
                 connection.commit()
                 return int(row[0])
 
-            cursor = sqlite_connection.execute(
+            cursor.execute(
                 """
                 INSERT INTO users (username, password_hash)
-                VALUES (?, ?)
+                VALUES (%s, %s)
+                RETURNING id
                 """,
                 (username, hash_password(password)),
             )
-            user_id = int(cast(Any, cursor).lastrowid or 0)
+            created_row = cursor.fetchone()
+            if created_row is None:
+                raise RuntimeError("Failed to create demo user")
+            user_id = int(created_row[0])
+        finally:
+            cursor.close()
 
         connection.commit()
         return user_id
@@ -64,52 +45,32 @@ def ensure_demo_user(username: str, password: str) -> int:
 
 def seed_tasks_for_user(user_id: int, tasks: Sequence[Tuple[str, str]], force: bool) -> int:
     with get_connection() as connection:
-        if use_postgres():
-            cursor = connection.cursor()
-            try:
-                if force:
-                    cursor.execute("DELETE FROM tasks WHERE user_id = %s", (user_id,))
-
-                cursor.execute("SELECT COUNT(1) FROM tasks WHERE user_id = %s", (user_id,))
-                count_row = cursor.fetchone()
-                existing_count = int(count_row[0]) if count_row else 0
-
-                if existing_count > 0 and not force:
-                    connection.commit()
-                    return 0
-
-                for title, description in tasks:
-                    cursor.execute(
-                        """
-                        INSERT INTO tasks (title, description, status, user_id)
-                        VALUES (%s, %s, %s, %s)
-                        """,
-                        (title, description, "todo", user_id),
-                    )
-            finally:
-                cursor.close()
-        else:
-            sqlite_connection = cast(Any, connection)
+        cursor = connection.cursor()
+        try:
             if force:
-                sqlite_connection.execute("DELETE FROM tasks WHERE user_id = ?", (user_id,))
+                cursor.execute("DELETE FROM tasks WHERE user_id = %s", (user_id,))
 
-            count_row = sqlite_connection.execute(
-                "SELECT COUNT(1) AS total FROM tasks WHERE user_id = ?",
+            cursor.execute(
+                "SELECT COUNT(1) FROM tasks WHERE user_id = %s",
                 (user_id,),
-            ).fetchone()
+            )
+            count_row = cursor.fetchone()
             existing_count = int(count_row[0]) if count_row else 0
 
             if existing_count > 0 and not force:
                 connection.commit()
                 return 0
 
-            sqlite_connection.executemany(
-                """
-                INSERT INTO tasks (title, description, status, user_id)
-                VALUES (?, ?, ?, ?)
-                """,
-                [(title, description, "todo", user_id) for title, description in tasks],
-            )
+            for title, description in tasks:
+                cursor.execute(
+                    """
+                    INSERT INTO tasks (title, description, status, user_id)
+                    VALUES (%s, %s, %s, %s)
+                    """,
+                    (title, description, "todo", user_id),
+                )
+        finally:
+            cursor.close()
 
         connection.commit()
         return len(tasks)

@@ -1,21 +1,19 @@
 import os
 import smtplib
-from pathlib import Path
+
+import pytest
 
 from fastapi.testclient import TestClient
 
 from app.core.database import init_database
 
-TEST_DB = Path(__file__).with_name("test_email.db")
-os.environ.pop("DATABASE_URL", None)
-os.environ["SQLITE_DB_PATH"] = str(TEST_DB)
+if not os.getenv("DATABASE_URL", "").strip():
+    pytest.skip("DATABASE_URL is required for integration tests", allow_module_level=True)
 
 from main import app  # noqa: E402
 
 
 def _reset_db() -> None:
-    if TEST_DB.exists():
-        TEST_DB.unlink()
     init_database()
 
 
