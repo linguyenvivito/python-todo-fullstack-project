@@ -1,8 +1,5 @@
 name: CI
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-
 on:
   push:
     branches: ["main", "master"]
@@ -105,3 +102,25 @@ jobs:
       - name: Build frontend
         working-directory: frontend
         run: npm run build
+
+  docker-build-and-validate:
+    name: Docker Build And Compose Validate
+    runs-on: ubuntu-latest
+    needs:
+      - backend-unit-tests
+      - frontend-build
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Build backend image
+        run: docker build -f Dockerfile -t restapi-backend:ci .
+
+      - name: Build frontend image
+        run: docker build -f frontend/Dockerfile -t restapi-frontend:ci frontend
+
+      - name: Validate docker compose
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@db:5432/tasks_db
+        run: docker compose config
