@@ -5,10 +5,16 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --glass-border: hsl(var(--b1) / 0.7);
+    --glass-bg: hsl(var(--b1) / 0.78);
+  }
+
   * {
     @apply box-border;
   }
 
+  html,
   body {
     @apply m-0 min-h-screen bg-base-100 font-display text-base-content antialiased;
   }
@@ -20,6 +26,16 @@
 
 @layer utilities {
   .glass-panel {
-    @apply rounded-3xl border border-white/70 bg-white/80 shadow-panel backdrop-blur;
+    @apply rounded-3xl shadow-panel backdrop-blur;
+    border: 1px solid var(--glass-border);
+    background-color: var(--glass-bg);
+  }
+
+  .app-shell {
+    @apply mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8;
+  }
+
+  .section-card {
+    @apply card border border-base-200 bg-base-100 shadow-xl;
   }
 }
