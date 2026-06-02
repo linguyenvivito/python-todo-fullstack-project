@@ -50,6 +50,12 @@ API docs:
 - Swagger UI: http://127.0.0.1:8888/docs
 - ReDoc: http://127.0.0.1:8888/redoc
 
+Observability endpoints:
+
+- Health: http://127.0.0.1:8888/health
+- Readiness: http://127.0.0.1:8888/ready
+- Metrics (Prometheus): http://127.0.0.1:8888/metrics
+
 ## Frontend Setup And Run
 
 From project root:
@@ -236,9 +242,12 @@ CI runs on push and pull request:
 - `SECURITY_HEADERS_ENABLED` (optional): enables standard security headers middleware. Default `true`.
 - `SECURITY_HSTS_ENABLED` (optional): enables `Strict-Transport-Security` header for HTTPS requests. Default `true`.
 - `REQUEST_LOGGING_ENABLED` (optional): enables app request logging middleware. Default `true`.
+- `TRACE_ENABLED` (optional): includes `traceparent`/`x-trace-id` context in request logs when `true`. Default `false`.
 - `LOG_LEVEL` (optional): Python log level for app logging, default `INFO`.
 - `LOG_FORMAT` (optional): Python logging format string.
 - `LOG_JSON` (optional): emits structured JSON logs to stdout when `true`. Default `false`.
+- `METRICS_ENABLED` (optional): enables request metrics middleware and `/metrics` endpoint. Default `true`.
+- `READINESS_CHECK_DATABASE` (optional): validates database connectivity in `/ready` when `true`. Default `true`.
 - `RATE_LIMITING_ENABLED` (optional): enables SlowAPI rate limiting. Default `true`.
 - `RATE_LIMIT_AUTH_REGISTER` (optional): register endpoint rate, default `30/minute`.
 - `RATE_LIMIT_AUTH_LOGIN` (optional): login endpoint rate, default `30/minute`.

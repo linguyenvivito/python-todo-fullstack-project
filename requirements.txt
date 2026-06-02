@@ -6,3 +6,4 @@ psycopg[binary]==3.2.13
 PyJWT==2.9.0
 bleach==6.2.0
 slowapi==0.1.9
+prometheus-client==0.20.0

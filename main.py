@@ -1,20 +1,24 @@
 import os
 import logging
-from typing import Dict
+from time import time
+from typing import Any, Dict
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from starlette.requests import Request
-from starlette.responses import Response
+from starlette.responses import JSONResponse, Response
 
+from app.core.database import get_connection
 from app.core.logging_config import configure_logging
 from app.core.rate_limit import limiter
 from app.middleware.cors_restriction import CorsRestrictionMiddleware
 from app.middleware.csrf_protection import CsrfProtectionMiddleware
 from app.middleware.request_logging import RequestLoggingMiddleware
+from app.middleware.request_metrics import RequestMetricsMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
 from app.slices.auth.router import router as auth_router
 from app.slices.audit.router import router as audit_router
@@ -22,6 +26,7 @@ from app.slices.email.router import router as email_router
 from app.slices.tasks.router import router as tasks_router
 
 logger = logging.getLogger("app.security.rate_limit")
+APP_STARTED_AT = time()
 
 
 def _handle_rate_limit_exceeded(request: Request, exc: Exception) -> Response:
@@ -44,8 +49,47 @@ def create_app() -> FastAPI:
     app.add_exception_handler(RateLimitExceeded, _handle_rate_limit_exceeded)
 
     @app.get("/health")
-    def health_check() -> Dict[str, str]:
-        return {"status": "ok"}
+    def health_check() -> Dict[str, Any]:
+        return {
+            "status": "ok",
+            "uptime_seconds": int(max(0, time() - APP_STARTED_AT)),
+        }
+
+    @app.get("/ready")
+    def readiness_check() -> JSONResponse:
+        readiness_check_database = (
+            os.getenv("READINESS_CHECK_DATABASE", "true").strip().lower() == "true"
+        )
+
+        checks: Dict[str, str] = {"database": "skipped"}
+        status_code = 200
+
+        if readiness_check_database:
+            try:
+                with get_connection() as connection:
+                    cursor = connection.cursor()
+                    try:
+                        cursor.execute("SELECT 1")
+                    finally:
+                        cursor.close()
+            except Exception:
+                checks["database"] = "error"
+                status_code = 503
+            else:
+                checks["database"] = "ok"
+
+        payload = {
+            "status": "ready" if status_code == 200 else "not_ready",
+            "checks": checks,
+        }
+        return JSONResponse(content=payload, status_code=status_code)
+
+    @app.get("/metrics", include_in_schema=False)
+    def metrics() -> Response:
+        metrics_enabled = os.getenv("METRICS_ENABLED", "true").strip().lower() == "true"
+        if not metrics_enabled:
+            return Response(status_code=404)
+        return Response(content=generate_latest().decode("utf-8"), media_type=CONTENT_TYPE_LATEST)
 
     cors_allow_origins = os.getenv(
         "CORS_ALLOW_ORIGINS",
@@ -69,11 +113,19 @@ def create_app() -> FastAPI:
     request_logging_enabled = (
         os.getenv("REQUEST_LOGGING_ENABLED", "true").strip().lower() == "true"
     )
+    trace_enabled = os.getenv("TRACE_ENABLED", "false").strip().lower() == "true"
+    metrics_enabled = os.getenv("METRICS_ENABLED", "true").strip().lower() == "true"
     strict_origin_check = os.getenv("CORS_STRICT_ORIGIN_CHECK", "true").strip().lower() == "true"
 
     app.add_middleware(
         RequestLoggingMiddleware,
         enabled=request_logging_enabled,
+        trace_enabled=trace_enabled,
+    )
+
+    app.add_middleware(
+        RequestMetricsMiddleware,
+        enabled=metrics_enabled,
     )
 
     app.add_middleware(
