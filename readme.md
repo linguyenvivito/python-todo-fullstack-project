@@ -67,6 +67,44 @@ Frontend URL:
 The frontend calls `http://127.0.0.1:8888` by default.
 To override, set `VITE_API_BASE_URL`.
 
+## Run With Docker Compose
+
+This project includes a 3-service Docker Compose setup:
+
+- `postgres` (PostgreSQL 16)
+- `backend` (FastAPI app on port `8888`)
+- `frontend` (Vite dev server on port `8880`)
+
+From project root:
+
+```powershell
+docker compose up --build
+```
+
+OR
+
+```powershell
+docker compose up -d --force-recreate
+```
+
+URLs:
+
+- Frontend: http://localhost:8880
+- Backend API: http://localhost:8888
+- Swagger UI: http://localhost:8888/docs
+
+Stop and remove containers:
+
+```powershell
+docker compose down
+```
+
+Remove containers and PostgreSQL volume:
+
+```powershell
+docker compose down -v
+```
+
 ## API Endpoints
 
 Base URL: `http://127.0.0.1:8888`

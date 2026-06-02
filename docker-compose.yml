@@ -1,0 +1,35 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: task_api_backend
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      CORS_ALLOW_ORIGINS: http://localhost:8880,http://127.0.0.1:8880
+      CSRF_TRUSTED_ORIGINS: http://localhost:8880,http://127.0.0.1:8880
+      JWT_SECRET_KEY: change-this-in-production
+      WATCHFILES_FORCE_POLLING: "true"
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8888 --reload
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: task_api_frontend
+    depends_on:
+      - backend
+    environment:
+      VITE_API_BASE_URL: http://localhost:8888
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: "100"
+    ports:
+      - "8880:8880"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev -- --host 0.0.0.0 --port 8880
