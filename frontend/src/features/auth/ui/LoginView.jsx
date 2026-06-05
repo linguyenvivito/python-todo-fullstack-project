@@ -34,7 +34,7 @@ export default function LoginView({ onLogin, onRegister }) {
       </div>
 
       <div className="relative z-10 w-full max-w-5xl columns-1 gap-4 lg:columns-2">
-        <section className="card mb-4 break-inside-avoid border border-base-200 bg-base-100 shadow-xl">
+        <section className="card mb-4 break-inside-avoid border border-base-200 shadow-xl">
           <div className="card-body p-6 sm:p-8">
             <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-primary">
               Task Management API
@@ -55,7 +55,7 @@ export default function LoginView({ onLogin, onRegister }) {
           </div>
         </section>
 
-        <section className="card mb-4 break-inside-avoid border border-base-200 bg-base-100 shadow-xl">
+        <section className="card mb-4 break-inside-avoid border border-base-200 shadow-xl">
           <div className="card-body p-6 sm:p-8">
             <form onSubmit={handleSubmit} className="grid gap-4">
               <label className="form-control w-full gap-1.5">

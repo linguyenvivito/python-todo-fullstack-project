@@ -1,7 +1,7 @@
 export default function UserPage({ authUser }) {
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
-      <header className="card border border-base-200 bg-base-100 shadow-xl">
+      <header className="card border border-base-200 shadow-xl">
         <div className="card-body p-6 sm:p-8">
           <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-primary">
             Task Management API

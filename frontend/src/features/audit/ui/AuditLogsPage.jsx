@@ -39,7 +39,7 @@ export default function AuditLogsPage({
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-      <header className="card border border-base-200 bg-base-100 shadow-xl">
+      <header className="card border border-base-200 shadow-xl">
         <div className="card-body p-6 sm:p-8">
           <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-primary">
             Task Management API
@@ -58,7 +58,7 @@ export default function AuditLogsPage({
         </div>
       </header>
 
-      <section className="card mt-4 border border-base-200 bg-base-100 shadow-xl">
+      <section className="card mt-4 border border-base-200 shadow-xl">
         <div className="card-body p-4 sm:p-5">
           <form className="grid gap-3 md:grid-cols-2 xl:grid-cols-4" onSubmit={applyFilters}>
             <input
@@ -139,7 +139,7 @@ export default function AuditLogsPage({
         </div>
       )}
 
-      <section className="card mt-4 border border-base-200 bg-base-100 shadow-xl overflow-hidden">
+      <section className="card mt-4 border border-base-200 shadow-xl overflow-hidden">
         <div className="flex flex-col gap-2 border-b border-base-200 bg-base-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="font-mono text-xs uppercase tracking-wide text-base-content/70">
             Showing {from}-{to} of {total}

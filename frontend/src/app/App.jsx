@@ -8,7 +8,7 @@ import TasksPage from "../features/tasks/ui/TasksPage";
 import UserPage from "../features/users/ui/UserPage";
 
 const THEME_STORAGE_KEY = "fluxboard.ui.theme";
-const THEME_OPTIONS = ["fluxboard", "light", "corporate"];
+const THEME_OPTIONS = ["fluxboard", "harbor", "lagoon", "light", "corporate"];
 const PAGE_TO_PATH = {
   tasks: "/task",
   user: "/user",
@@ -143,7 +143,7 @@ export default function App() {
   const shell = (
     <div className="mx-auto w-full max-w-[1440px] px-3 py-4 sm:px-6 lg:px-8">
       <div className="grid gap-4 lg:grid-cols-[280px_minmax(760px,1fr)] lg:gap-6">
-        <aside className="card border border-base-200 bg-base-100 shadow-xl lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)]">
+        <aside className="card border border-base-200 shadow-xl lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)]">
           <div className="card-body p-5">
             <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Task Management API</p>
             <h1 className="text-2xl font-bold tracking-tight">Fluxboard</h1>
@@ -167,8 +167,8 @@ export default function App() {
               ))}
             </nav>
 
-            <div className="mt-auto space-y-3">
-              <label className="form-control rounded-xl border border-base-300 bg-base-100 p-2">
+            <div className="mt-auto grid space-y-3">
+              <label className="form-control rounded-xl border border-base-300 p-2">
                 <span className="label pb-1 pt-0">
                   <span className="label-text font-mono text-[11px] uppercase tracking-wide text-base-content/70">Theme</span>
                 </span>
@@ -178,6 +178,8 @@ export default function App() {
                   onChange={(event) => setTheme(event.target.value)}
                 >
                   <option value="fluxboard">Fluxboard</option>
+                  <option value="harbor">Harbor</option>
+                  <option value="lagoon">Lagoon</option>
                   <option value="light">Light</option>
                   <option value="corporate">Corporate</option>
                 </select>
@@ -196,7 +198,7 @@ export default function App() {
   );
 
   return (
-    <div data-theme={theme} className="min-h-screen bg-base-100 text-base-content">
+    <div data-theme={theme} className="min-h-screen text-base-content">
       {authUser ? shell : content}
     </div>
   );

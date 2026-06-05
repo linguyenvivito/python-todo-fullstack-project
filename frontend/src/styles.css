@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -7,8 +7,52 @@
 
 @layer base {
   :root {
-    --glass-border: hsl(var(--b1) / 0.7);
-    --glass-bg: hsl(var(--b1) / 0.78);
+    --glass-border: hsl(var(--b3) / 0.95);
+    --glass-bg: hsl(var(--b1) / 0.9);
+    --page-gradient-a: color-mix(in oklab, hsl(var(--p)) 18%, white);
+    --page-gradient-b: color-mix(in oklab, hsl(var(--s)) 20%, white);
+    --page-gradient-c: color-mix(in oklab, hsl(var(--a)) 16%, white);
+    --page-bg: hsl(var(--b1));
+    --root-bg: var(--page-bg);
+    --color-base-content: hsl(var(--bc));
+    --ui-radius: 0.75rem;
+    --soft-shadow: 0 18px 45px -24px rgba(15, 23, 42, 0.45);
+  }
+
+  :root,
+  [data-theme] {
+    background: var(--page-scroll-bg, var(--root-bg));
+    color: var(--color-base-content);
+  }
+
+  [data-theme="harbor"] {
+    --page-bg: #0f3f6a;
+    --glass-border: hsl(var(--b3) / 0.96);
+    --glass-bg: hsl(var(--b1) / 0.9);
+    --page-gradient-a: color-mix(in oklab, #1d4ed8 32%, white);
+    --page-gradient-b: color-mix(in oklab, #0f766e 30%, white);
+    --page-gradient-c: color-mix(in oklab, #ea580c 22%, white);
+    --soft-shadow: 0 20px 46px -24px rgba(12, 38, 70, 0.42);
+  }
+
+  [data-theme="lagoon"] {
+    --page-bg: #0b5f87;
+    --glass-border: hsl(var(--b3) / 0.98);
+    --glass-bg: hsl(var(--b1) / 0.88);
+    --page-gradient-a: color-mix(in oklab, #0e7490 34%, white);
+    --page-gradient-b: color-mix(in oklab, #15803d 32%, white);
+    --page-gradient-c: color-mix(in oklab, #2563eb 30%, white);
+    --soft-shadow: 0 20px 48px -24px rgba(11, 45, 64, 0.38);
+  }
+
+  [data-theme="light"] {
+    --page-bg: #f4f8ff;
+    --glass-border: hsl(var(--b3) / 0.88);
+    --glass-bg: hsl(var(--b1) / 0.94);
+    --page-gradient-a: color-mix(in oklab, #60a5fa 16%, white);
+    --page-gradient-b: color-mix(in oklab, #14b8a6 14%, white);
+    --page-gradient-c: color-mix(in oklab, #f59e0b 10%, white);
+    --soft-shadow: 0 16px 38px -24px rgba(37, 64, 112, 0.28);
   }
 
   * {
@@ -17,11 +61,147 @@
 
   html,
   body {
-    @apply m-0 min-h-screen bg-base-100 font-display text-base-content antialiased;
+    @apply m-0 min-h-screen font-display text-base-content antialiased;
+    background: var(--page-scroll-bg, var(--root-bg));
+    line-height: 1.45;
+  }
+
+  [data-theme] {
+    background:
+      radial-gradient(1100px 600px at 8% -10%, var(--page-gradient-a) 0%, transparent 52%),
+      radial-gradient(900px 620px at 100% 0%, var(--page-gradient-b) 0%, transparent 48%),
+      radial-gradient(880px 580px at 70% 120%, var(--page-gradient-c) 0%, transparent 56%),
+      var(--page-bg);
   }
 
   #root {
     @apply min-h-screen;
+  }
+}
+
+@layer components {
+  .card {
+    @apply border border-base-300;
+    border-radius: calc(var(--ui-radius) + 0.35rem);
+    border-color: hsl(var(--b3) / 0.9);
+    background-color: hsl(var(--b1) / 0.92);
+    box-shadow: var(--soft-shadow);
+    backdrop-filter: blur(7px);
+    transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+  }
+
+  .card .card-body {
+    @apply p-5 sm:p-6;
+  }
+
+  .btn {
+    @apply font-semibold tracking-wide;
+    border-radius: var(--ui-radius);
+    padding-inline: 1rem;
+    padding-block: 0.6rem;
+    line-height: 1.1;
+    transition: transform 140ms ease, box-shadow 160ms ease, background-color 160ms ease, border-color 160ms ease;
+  }
+
+  .btn:focus-visible,
+  .btn-primary:focus-visible,
+  .btn-ghost:focus-visible {
+    outline: 2px solid color-mix(in oklab, hsl(var(--p)) 34%, white);
+    outline-offset: 2px;
+  }
+
+  .btn-sm {
+    padding-inline: 0.8rem;
+    padding-block: 0.45rem;
+    border-radius: calc(var(--ui-radius) - 0.05rem);
+  }
+
+  .btn-primary {
+    @apply text-white;
+    box-shadow: 0 12px 24px -14px color-mix(in oklab, hsl(var(--p)) 75%, black);
+  }
+
+  .btn-ghost {
+    @apply border-base-300;
+    background-color: hsl(var(--b1) / 0.65);
+  }
+
+  .input,
+  .textarea,
+  .select {
+    @apply border-base-300;
+    border-radius: var(--ui-radius);
+    background-color: hsl(var(--b1) / 0.95);
+    padding-inline: 0.9rem;
+    font-size: 0.95rem;
+    transition: border-color 140ms ease, background-color 140ms ease, box-shadow 140ms ease;
+  }
+
+  .input,
+  .select {
+    min-height: 2.75rem;
+  }
+
+  .textarea {
+    padding-block: 0.7rem;
+    min-height: 7.5rem;
+  }
+
+  .input-sm,
+  .select-sm {
+    min-height: 2.25rem;
+    padding-inline: 0.7rem;
+    border-radius: calc(var(--ui-radius) - 0.1rem);
+    font-size: 0.85rem;
+  }
+
+  .textarea-sm {
+    min-height: 5.5rem;
+    padding-inline: 0.7rem;
+    padding-block: 0.55rem;
+    border-radius: calc(var(--ui-radius) - 0.1rem);
+    font-size: 0.85rem;
+  }
+
+  .input:focus,
+  .textarea:focus,
+  .select:focus {
+    outline: 2px solid color-mix(in oklab, hsl(var(--p)) 36%, white);
+    outline-offset: 1px;
+  }
+
+  .alert {
+    @apply border border-base-300 shadow-sm;
+    border-radius: calc(var(--ui-radius) + 0.2rem);
+    padding: 0.8rem 0.95rem;
+  }
+
+  .table :where(th) {
+    @apply bg-base-200 text-[11px] tracking-[0.14em] text-base-content;
+    background-color: hsl(var(--b2) / 0.85);
+    color: hsl(var(--bc) / 0.75);
+  }
+
+  .table :where(td) {
+    @apply align-middle;
+  }
+
+  .badge {
+    border-radius: calc(var(--ui-radius) - 0.15rem);
+  }
+
+  .label .label-text {
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    line-height: 1.2;
+    letter-spacing: -0.01em;
   }
 }
 
@@ -37,6 +217,6 @@
   }
 
   .section-card {
-    @apply card border border-base-200 bg-base-100 shadow-xl;
+    @apply card border border-base-200 shadow-xl;
   }
 }

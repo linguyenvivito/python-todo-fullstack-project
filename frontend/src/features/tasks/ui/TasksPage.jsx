@@ -31,7 +31,7 @@ export default function TasksPage({
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-      <header className="card border border-base-200 bg-base-100 shadow-xl">
+      <header className="card border border-base-200 shadow-xl">
         <div className="card-body p-6 sm:p-8">
         <p className="font-mono text-xs font-semibold uppercase tracking-[0.18em] text-primary">
           Task Management API
@@ -50,7 +50,7 @@ export default function TasksPage({
         </div>
       </header>
 
-      <section className="card mt-4 border border-base-200 bg-base-100 shadow-xl">
+      <section className="card mt-4 border border-base-200 shadow-xl">
         <div className="card-body p-4 sm:p-5">
         <form onSubmit={createNewTask} className="grid gap-3">
           <input
@@ -115,7 +115,7 @@ export default function TasksPage({
 
       <main className="mt-5 columns-1 gap-4 lg:columns-3">
         {groupedTasks.map((column) => (
-          <section key={column.status} className="card mb-4 break-inside-avoid border border-base-200 bg-base-100 shadow-xl overflow-hidden">
+          <section key={column.status} className="card mb-4 break-inside-avoid border border-base-200 shadow-xl overflow-hidden">
             <div className="flex items-center justify-between border-b border-base-200 bg-base-200 px-4 py-3">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-base-content/80">
                 {STATUS_LABELS[column.status]}
@@ -130,7 +130,7 @@ export default function TasksPage({
                 <article
                   key={task.id}
                   className={`mb-3 break-inside-avoid rounded-2xl border p-3 shadow-sm transition ${
-                    statusCardClasses[task.status] || "border-base-300 bg-base-100"
+                    statusCardClasses[task.status] || "border-base-300"
                   }`}
                 >
                   <h3 className="text-base font-semibold text-base-content">{task.title}</h3>
@@ -161,7 +161,7 @@ export default function TasksPage({
               ))}
 
               {column.tasks.length === 0 && (
-                <p className="rounded-xl border border-dashed border-base-300 bg-base-100 px-3 py-3 font-mono text-xs uppercase tracking-wide text-base-content/60">
+                <p className="rounded-xl border border-dashed border-base-300 px-3 py-3 font-mono text-xs uppercase tracking-wide text-base-content/60">
                   No tasks yet
                 </p>
               )}
