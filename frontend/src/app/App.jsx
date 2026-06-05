@@ -5,11 +5,13 @@ import AuditLogsPage from "../features/audit/ui/AuditLogsPage";
 import EmailPage from "../features/email/ui/EmailPage";
 import RolesPage from "../features/roles/ui/RolesPage";
 import TasksPage from "../features/tasks/ui/TasksPage";
+import UserPage from "../features/users/ui/UserPage";
 
 const THEME_STORAGE_KEY = "fluxboard.ui.theme";
 const THEME_OPTIONS = ["fluxboard", "light", "corporate"];
 const PAGE_TO_PATH = {
   tasks: "/task",
+  user: "/user",
   audit: "/audit",
   email: "/email",
   roles: "/role",
@@ -18,7 +20,8 @@ const PAGE_TO_PATH = {
 const PATH_TO_PAGE = {
   "/task": "tasks",
   "/tasks": "tasks",
-  "/user": "tasks",
+  "/user": "user",
+  "/users": "user",
   "/audit": "audit",
   "/email": "email",
   "/role": "roles",
@@ -93,6 +96,8 @@ export default function App() {
 
   if (!authUser) {
     content = <LoginView onLogin={login} onRegister={register} />;
+  } else if (page === "user") {
+    content = <UserPage authUser={authUser} />;
   } else if (page === "audit") {
     content = (
       <AuditLogsPage
@@ -129,6 +134,7 @@ export default function App() {
 
   const menuItems = [
     { id: "tasks", label: "Tasks" },
+    { id: "user", label: "User" },
     { id: "audit", label: "Audit Logs" },
     { id: "email", label: "Email" },
     { id: "roles", label: "Roles" },
