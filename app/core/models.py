@@ -25,6 +25,10 @@ class User:
     username: str
     password_hash: str
 
+@dataclass
+class Role:
+    id: int
+    name: str
 
 @dataclass
 class AuditLog:

@@ -5,9 +5,6 @@ export default function EmailPage({
   authUser,
   accessToken,
   withAuthenticatedRequest,
-  onShowTasks,
-  onShowAudit,
-  onLogout,
 }) {
   const {
     mode,
@@ -51,22 +48,10 @@ export default function EmailPage({
             Send manual or templated transactional emails through your configured SMTP provider.
           </p>
 
-          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-5">
             <span className="font-mono text-xs uppercase tracking-wide text-base-content/70">
               Signed in as {authUser}
             </span>
-
-            <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={onShowTasks} className="btn btn-sm btn-outline">
-                Tasks
-              </button>
-              <button type="button" onClick={onShowAudit} className="btn btn-sm btn-outline">
-                Audit Logs
-              </button>
-              <button type="button" onClick={onLogout} className="btn btn-sm btn-primary">
-                Logout
-              </button>
-            </div>
           </div>
         </div>
       </header>

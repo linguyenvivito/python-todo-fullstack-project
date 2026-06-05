@@ -3,6 +3,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@plugin DaisyUI;
 
 @layer base {
   :root {

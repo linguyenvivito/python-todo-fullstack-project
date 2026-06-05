@@ -78,6 +78,17 @@ def init_database() -> None:
                     details_json TEXT NULL
                 );
 
+                CREATE TABLE IF NOT EXISTS roles (
+                    id BIGSERIAL PRIMARY KEY,
+                    name TEXT NOT NULL UNIQUE
+                );
+
+                CREATE TABLE IF NOT EXISTS user_roles (
+                    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    role_id BIGINT NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
+                    PRIMARY KEY (user_id, role_id)
+                );
+
                 ALTER TABLE tasks
                 ADD COLUMN IF NOT EXISTS user_id BIGINT NULL REFERENCES users(id) ON DELETE CASCADE;
 
@@ -95,6 +106,7 @@ def init_database() -> None:
 
                 CREATE INDEX IF NOT EXISTS idx_audit_logs_action
                 ON audit_logs(action);
+
                 """
             )
         finally:

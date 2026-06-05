@@ -16,6 +16,7 @@ from app.slices.tasks.service import TaskService
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 logger = logging.getLogger("app.api.tasks")
 
+# Dependency to get TaskService instance with caching
 @lru_cache(maxsize=1)
 def get_task_service() -> TaskService:
     repository = TaskRepository()

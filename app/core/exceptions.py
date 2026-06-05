@@ -13,3 +13,9 @@ class TaskNotFoundByNameError(Exception):
 class InvalidTaskSearchError(Exception):
     def __init__(self):
         super().__init__("Task search term must not be empty")
+
+
+class RoleNotFoundError(Exception):
+    def __init__(self, role_id: int):
+        super().__init__("Role with id {0} was not found".format(role_id))
+        self.role_id = role_id

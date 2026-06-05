@@ -12,9 +12,6 @@ export default function TasksPage({
   authUser,
   accessToken,
   withAuthenticatedRequest,
-  onShowAudit,
-  onShowEmail,
-  onLogout,
 }) {
   const {
     title,
@@ -45,34 +42,10 @@ export default function TasksPage({
           A live React interface for your FastAPI + PostgreSQL task service.
         </p>
 
-        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-5">
           <span className="font-mono text-xs uppercase tracking-wide text-base-content/70">
             Signed in as {authUser}
           </span>
-
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={onShowAudit}
-              className="btn btn-sm btn-outline"
-            >
-              Audit Logs
-            </button>
-            <button
-              type="button"
-              onClick={onShowEmail}
-              className="btn btn-sm btn-outline"
-            >
-              Email
-            </button>
-            <button
-              type="button"
-              onClick={onLogout}
-              className="btn btn-sm btn-primary"
-            >
-              Logout
-            </button>
-          </div>
         </div>
         </div>
       </header>
@@ -156,7 +129,7 @@ export default function TasksPage({
               {column.tasks.map((task) => (
                 <article
                   key={task.id}
-                  className={`mb-3 break-inside-avoid rounded-2xl border p-3 shadow-sm transition hover:-translate-y-0.5 ${
+                  className={`mb-3 break-inside-avoid rounded-2xl border p-3 shadow-sm transition ${
                     statusCardClasses[task.status] || "border-base-300 bg-base-100"
                   }`}
                 >
