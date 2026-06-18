@@ -2,11 +2,9 @@ import logging
 from functools import lru_cache
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends
 
-from app.core.audit import audit_service
 from app.core.models import User
-from app.core.rate_limit import limiter, rate_limit
 from app.slices.auth.dependencies import get_request_user
 from app.slices.auth.models import UserResponse
 from app.slices.users.repository import UserRepository

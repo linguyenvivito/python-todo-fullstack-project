@@ -1,4 +1,4 @@
-from typing import Any, List, Optional, cast
+from typing import Any, List, cast
 
 try:
     from psycopg.rows import dict_row
