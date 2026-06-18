@@ -25,6 +25,7 @@ from app.slices.audit.router import router as audit_router
 from app.slices.email.router import router as email_router
 from app.slices.tasks.router import router as tasks_router
 from app.slices.roles.router import router as roles_router
+from app.slices.users.router import router as users_router
 
 logger = logging.getLogger("app.security.rate_limit")
 APP_STARTED_AT = time()
@@ -161,6 +162,7 @@ def create_app() -> FastAPI:
     app.include_router(email_router)
     app.include_router(tasks_router)
     app.include_router(roles_router)
+    app.include_router(users_router)
     return app
 
 
